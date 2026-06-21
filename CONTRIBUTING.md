@@ -6,7 +6,7 @@ Registro de quem fez o quê em cada entrega (exigido pelas regras do projeto).
 
 | Integrante | Tarefa | Commit(s) |
 |---|---|---|
-|  | Desenho de retângulo |  |
+| Tarcisio Almeida Mascarenhas | Desenho de retângulo | e6c7037 |
 |  | Desenho de oval |  |
 |  | Seletor de cor de borda |  |
 |  | Seletor de cor de preenchimento |  |
