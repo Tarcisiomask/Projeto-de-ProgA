@@ -1,6 +1,6 @@
 # Divisão de Tarefas
 
-Registro de quem fez o quê em cada entrega (exigido pelas regras do projeto).
+Registro de quem fez o quê em cada entrega.
 
 ## Entrega 1 — `imperativa.1` (18/06)
 
