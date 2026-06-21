@@ -6,9 +6,7 @@ Python + Tkinter para a disciplina de Programação A (UFS, 2026-1).
 ## Requisitos
 
 - Python **3.10** ou superior
-- Tkinter (vem com o Python na maioria dos sistemas; no Linux pode exigir o pacote
-  `python3-tk`. Teste com `python -m tkinter`)
-
+- Tkinter
 ## Como executar
 
 ```bash
@@ -31,7 +29,7 @@ python main.py
 
 | Nome | GitHub |
 |---|---|
-|  |  |
+| Tarcisio Almeida Mascarenhas | Tarcisiomask |
 |  |  |
 |  |  |
 |  |  |
