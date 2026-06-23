@@ -30,7 +30,7 @@ python main.py
 | Nome | GitHub |
 |---|---|
 | Tarcisio Almeida Mascarenhas | Tarcisiomask |
-|  |  |
+| Pedro Lucas de Jesus Vasconcelos | OmegaB4k4 |
 |  |  |
 |  |  |
 
