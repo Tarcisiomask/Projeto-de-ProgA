@@ -8,7 +8,7 @@ Registro de quem fez o quê em cada entrega.
 |---|---|---|
 | Tarcisio Almeida Mascarenhas | Desenho de retângulo | e6c7037 |
 |  | Desenho de oval |  |
-|  | Seletor de cor de borda |  |
+|  | Seletor de cor de borda | 0f9b2b2 |
 | Gustavoo Alexandre Barros Souza | Seletor de cor de preenchimento | 99f70db |
 
 ## Entrega 2 — `OO.1` (25/06)
