@@ -5,69 +5,64 @@ from tkinter import ttk, colorchooser
 def iniciar_figura_nova(event):
     global figura_nova
     tipo = tipo_figura_var.get()
-    
     if tipo == 'Linha':
-        figura_nova = ("linha", (event.x, event.y, event.x, event.y), cor_preenchimento_atual)
+        figura_nova = ("linha", (event.x, event.y, event.x, event.y), cor_borda_atual, cor_preenchimento_atual)
     elif tipo == 'Retângulo':
-        figura_nova = ("retangulo", (event.x, event.y, event.x, event.y), cor_preenchimento_atual)
+        figura_nova = ("retangulo", (event.x, event.y, event.x, event.y), cor_borda_atual, cor_preenchimento_atual)
     else:  # Rabisco
-        figura_nova = ("rabisco", [(event.x, event.y)], cor_preenchimento_atual)
+        figura_nova = ("rabisco", [(event.x, event.y)], cor_borda_atual, cor_preenchimento_atual)
 
 # Quando mouse é movido com o botão pressionado
 def atualizar_figura_nova(event):
     global figura_nova
-    fig, values, cor_p = figura_nova
-    
+    fig, values, cor = figura_nova
     if fig == "rabisco":
         values.append((event.x, event.y))
-    else:  # fig == "linha" ou fig == "retangulo"
-        figura_nova = (fig, (values[0], values[1], event.x, event.y), cor_p)
-        
+    else:  # fig == "linha" ou "retangulo"
+        figura_nova = (fig, (values[0], values[1], event.x, event.y), cor)
     desenhar()
     desenhar_figura_nova()
 
 # Quando mouse é solto
 def incluir_figura_nova(event):
-    if not incompleta(figura_nova):  # Evita incluir figuras sem dimensão (cliques acidentais)
+    if not incompleta(figura_nova):  # para evitar incluir figuras incompletas
         figuras.append(figura_nova)
     desenhar()
 
-# Redesenha todas as figuras salvas
 def desenhar():
     canvas.delete("all")
-    for fig, values, cor_p in figuras:
+    for fig, values, cor in figuras:
         if fig == "linha":
-            canvas.create_line(values[0], values[1], values[2], values[3])
+            canvas.create_line(values[0], values[1], values[2], values[3], fill=cor)
         elif fig == "retangulo":
-            canvas.create_rectangle(values[0], values[1], values[2], values[3], fill=cor_p)
+            canvas.create_rectangle(values[0], values[1], values[2], values[3], outline=cor)
         else:  # fig == "rabisco"
-            canvas.create_line(values)
+            canvas.create_line(values, fill=cor)
 
-# Desenha a figura atual (tracejada) enquanto o mouse é arrastado
 def desenhar_figura_nova():
-    if figura_nova is None:
-        return
-        
-    fig, values, cor_p = figura_nova
+    fig, values, cor = figura_nova
     if fig == "linha":
-        canvas.create_line(values[0], values[1], values[2], values[3], dash=(4, 2))
+        canvas.create_line(values[0], values[1], values[2], values[3], fill=cor, dash=(4, 2))
     elif fig == "retangulo":
-        canvas.create_rectangle(values[0], values[1], values[2], values[3], fill=cor_p, dash=(4, 2))
+        canvas.create_rectangle(values[0], values[1], values[2], values[3], outline=cor, dash=(4, 2))
     else:  # fig == "rabisco"
-        canvas.create_line(values, dash=(4, 2))
+        canvas.create_line(values, fill=cor, dash=(4, 2))
 
-# Verifica se a figura é apenas um ponto (clique sem arrastar)
 def incompleta(figura):
-    if figura is None:
-        return True
-        
-    fig, values, cor_p = figura
+    fig, values, cor = figura
     if fig == "rabisco":
         return len(values) <= 1
-    else:  # fig == "linha" ou fig == "retangulo"
+    else:  # fig == "linha" ou "retangulo"
         return (values[0], values[1]) == (values[2], values[3])
 
-
+# Abre o seletor de cores do sistema e guarda a cor escolhida para a borda
+def escolher_cor_borda():
+    global cor_borda_atual
+    cor = colorchooser.askcolor(color=cor_borda_atual, title="Escolha a cor da borda")[1]
+    if cor:  # None se o usuário cancelar
+        cor_borda_atual = cor
+        amostra_borda.config(bg=cor_borda_atual)
+        
 # Abre o seletor de cores do sistema e guarda a cor escolhida para o preenchimento
 def escolher_cor_preenchimento():
     global cor_preenchimento_atual
@@ -85,31 +80,40 @@ def remover_preenchimento():
 
 
 # Variáveis Globais de Estado
-figuras = []       # Todas as figuras desenhadas e finalizadas
-figura_nova = None # Figura que está sendo desenhada no momento
-cor_preenchimento_atual = ""     # Cor de preenchimento usada nas próximas figuras ("" = sem preenchimento)
+figuras = []        # Todas as figuras desenhadas
+figura_nova = None  # Figura que está sendo desenhada, mas ainda não foi incluída em figuras
+cor_borda_atual = "black"  # Cor de borda que será usada nas próximas figuras
 
 
 def main():
-    global canvas, tipo_figura_var, amostra_preenchimento
+    global canvas, tipo_figura_var, amostra_borda, amostra_preenchimento
 
     root = tk.Tk()
-    root.title("Ferramenta de Desenho")
     frame = tk.Frame(root)
 
-    # Configuração de padding para o grid
+    # Widgets arranjados com Layout grid dentro de frame
     paddings = {'padx': 5, 'pady': 5}
 
-    # Label do menu
+    # label
     label = ttk.Label(frame, text='Ferramenta:')
     label.grid(column=0, row=0, sticky=tk.W, **paddings)
 
-    # Menu de opções (Dropdown)
-    tipo_figura_var = tk.StringVar(root)
+    # option menu
+    tipo_figura_var = tk.StringVar(root)  # Guarda o tipo de figura selecionado
     option_menu = ttk.OptionMenu(frame, tipo_figura_var,
                                  'Linha', 'Linha', 'Rabisco', 'Retângulo')
     option_menu.grid(column=1, row=0, sticky=tk.W, **paddings)
 
+    # Seletor de cor de borda
+    label_cor_borda = ttk.Label(frame, text='Cor da borda:')
+    label_cor_borda.grid(column=2, row=0, sticky=tk.W, **paddings)
+
+    amostra_borda = tk.Label(frame, bg=cor_borda_atual, width=3, relief=tk.SUNKEN)
+    amostra_borda.grid(column=3, row=0, sticky=tk.W, **paddings)
+
+    botao_cor_borda = ttk.Button(frame, text='Escolher...', command=escolher_cor_borda)
+    botao_cor_borda.grid(column=4, row=0, sticky=tk.W, **paddings)
+    
     # Seletor de cor de preenchimento
     label_cor_preenchimento = ttk.Label(frame, text='Preenchimento:')
     label_cor_preenchimento.grid(column=2, row=0, sticky=tk.W, **paddings)
@@ -123,13 +127,13 @@ def main():
     botao_sem_preenchimento = ttk.Button(frame, text='Sem preenchimento', command=remover_preenchimento)
     botao_sem_preenchimento.grid(column=5, row=0, sticky=tk.W, **paddings)
 
-    # Área de desenho (Canvas)
+    # Área de desenho
     canvas = tk.Canvas(frame, bg='white', width=600, height=600)
-    canvas.grid(column=0, row=1, columnspan=6, sticky=tk.W, **paddings)
+    canvas.grid(column=0, row=1, columnspan=5, sticky=tk.W, **paddings)
 
     frame.pack()
 
-    # Associação (bind) dos eventos do mouse com as funções criadas
+    # Eventos de mouse associados ao canvas - com seus callbacks
     canvas.bind('<ButtonPress-1>', iniciar_figura_nova)
     canvas.bind('<B1-Motion>', atualizar_figura_nova)
     canvas.bind('<ButtonRelease-1>', incluir_figura_nova)
