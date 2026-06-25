@@ -162,6 +162,15 @@ def desenhar():
     for fig in figuras:
         fig.desenhar(canvas)
 
+def limpar_tela():
+    global figuras
+    # Abordagem POO: Destruímos todas as instâncias de objetos salvos na memória
+    figuras.clear() 
+    
+    # Chama a função desenhar() novamente.
+    # Como a lista 'figuras' agora está vazia, ela vai apenas executar o 
+    # canvas.delete("all") e não desenhará nenhum objeto novo.
+    desenhar()
 
 def escolher_cor_borda():
     global cor_borda_atual
@@ -213,14 +222,17 @@ def main():
     ttk.Label(frame, text="Preenchimento:").grid(column=0, row=1, sticky=tk.W, **paddings)
     amostra_preenchimento = tk.Label(frame, bg="white", width=3, relief=tk.SUNKEN)
     amostra_preenchimento.grid(column=1, row=1, sticky=tk.W, **paddings)
+    
+    botao_limpar = ttk.Button(frame, text="Clear", command=limpar_tela)
+    botao_limpar.grid(column=0, row=2, sticky='', **paddings)
     ttk.Button(frame, text="Escolher...", command=escolher_cor_preenchimento).grid(
         column=2, row=1, sticky=tk.W, **paddings)
     ttk.Button(frame, text="Sem preenchimento", command=remover_preenchimento).grid(
         column=3, row=1, columnspan=2, sticky=tk.W, **paddings)
 
     canvas = tk.Canvas(frame, bg="white", width=600, height=600)
-    canvas.grid(column=0, row=2, columnspan=5, sticky=tk.W, **paddings)
-
+    canvas.grid(column=0, row=3, columnspan=5, sticky=tk.W, **paddings)
+    
     frame.pack()
 
     canvas.bind("<ButtonPress-1>", iniciar_figura_nova)
@@ -232,6 +244,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
