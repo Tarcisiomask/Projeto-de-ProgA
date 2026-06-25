@@ -119,6 +119,31 @@ class Oval(Figura):
     def incompleta(self) -> bool:
         return (self.x1, self.y1) == (self.x2, self.y2)
 
+class Triangulo(Figura):
+    def __init__(self, x1: int, y1: int, cor_borda: str = "black", cor_preenchimento: str = ""):
+        super().__init__(cor_borda, cor_preenchimento)
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x1
+        self.y2 = y1
+        self.x3 = x1
+        self.y3 = y1 
+
+    def atualizar(self, x: int, y: int) -> None:
+        self.x2 = x
+        self.y2 = y
+        self.x3 = (self.x1 + self.x2) / 2  # Base do triângulo
+        self.y3 = self.y1 - (self.x2 - self.x1) * 0.866  # Altura do triângulo equilátero
+
+    def desenhar(self, canvas: tk.Canvas) -> None:
+        canvas.create_polygon(self.x1, self.y1, self.x2, self.y2, self.x3, self.y3, outline=self.cor_borda, fill=self.cor_preenchimento)
+
+    def desenhar_preview(self, canvas: tk.Canvas) -> None:
+        canvas.create_polygon(self.x1, self.y1, self.x2, self.y2, self.x3, self.y3, outline=self.cor_borda, fill=self.cor_preenchimento, dash=(4, 2))
+
+    def incompleta(self) -> bool:
+        return (self.x1, self.y1) == (self.x2, self.y2) == (self.x3, self.y3)
+
 
 # =============================================================================
 # Funções de callback e estado global
@@ -140,6 +165,8 @@ def iniciar_figura_nova(event):
         figura_nova = Retangulo(event.x, event.y, cor_borda_atual, cor_preenchimento_atual)
     elif tipo == "Oval":
         figura_nova = Oval(event.x, event.y, cor_borda_atual, cor_preenchimento_atual)
+    elif tipo == "Triângulo":
+        figura_nova = Triangulo(event.x, event.y, cor_borda_atual, cor_preenchimento_atual)
     # falta adicionar rabisco
 
 
@@ -210,7 +237,7 @@ def main():
 
     tipo_figura_var = tk.StringVar(root)
     ttk.OptionMenu(frame, tipo_figura_var,
-                   "Linha", "Linha", "Retângulo", "Oval"
+                   "Linha", "Linha", "Retângulo", "Oval", "Triângulo"
                    ).grid(column=1, row=0, sticky=tk.W, **paddings)
 
     ttk.Label(frame, text="Cor da borda:").grid(column=2, row=0, sticky=tk.W, **paddings)
