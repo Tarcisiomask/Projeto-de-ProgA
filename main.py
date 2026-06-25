@@ -143,8 +143,6 @@ def iniciar_figura_nova(event):
     # falta adicionar rabisco
 
 
-
-
 def atualizar_figura_nova(event):
     if figura_nova is None:
         return
@@ -234,7 +232,7 @@ def main():
 
     canvas = tk.Canvas(frame, bg="white", width=600, height=600)
     canvas.grid(column=0, row=3, columnspan=5, sticky=tk.W, **paddings)
-desenhar
+    
     frame.pack()
 
     canvas.bind("<ButtonPress-1>", iniciar_figura_nova)
