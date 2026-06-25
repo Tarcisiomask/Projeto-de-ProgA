@@ -194,7 +194,6 @@ def main():
     global canvas, tipo_figura_var, amostra_borda, amostra_preenchimento
 
     root = tk.Tk()
-    root.title("Ferramenta de Desenho")
     frame = tk.Frame(root)
     paddings = {"padx": 5, "pady": 5}
 

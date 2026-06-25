@@ -1,15 +1,15 @@
 # Divisão de Tarefas
 
-Registro de quem fez o quê em cada entrega (exigido pelas regras do projeto).
+Registro de quem fez o quê em cada entrega.
 
 ## Entrega 1 — `imperativa.1` (18/06)
 
 | Integrante | Tarefa | Commit(s) |
 |---|---|---|
-|  | Desenho de retângulo |  |
-|  | Desenho de oval |  |
-|  | Seletor de cor de borda |  |
-|  | Seletor de cor de preenchimento |  |
+| Tarcisio Almeida Mascarenhas | Desenho de retângulo | e6c7037 |
+| Tarcisio Almeida Mascarenhas | Desenho de oval | b8b5a40 |
+| Pedro Lucas de Jesus Vasconcelos | Seletor de cor de borda | 0f9b2b2 |
+| Gustavo Alexandre Barros Souza | Seletor de cor de preenchimento | 99f70db |
 
 ## Entrega 2 — `OO.1` (25/06)
 
