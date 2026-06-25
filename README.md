@@ -32,7 +32,7 @@ python main.py
 | Tarcisio Almeida Mascarenhas | Tarcisiomask |
 | Pedro Lucas de Jesus Vasconcelos | OmegaB4k4 |
 | Gustavo Alexandre Barros Souza | GustaCC7 |
-|  |  |
+| Gabriel de Sena Barbosa | Senadcomp |
 
 ## Histórico de entregas
 
