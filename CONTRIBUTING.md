@@ -10,6 +10,8 @@ Registro de quem fez o quê em cada entrega.
 | Tarcisio Almeida Mascarenhas | Desenho de oval | b8b5a40 |
 | Pedro Lucas de Jesus Vasconcelos | Seletor de cor de borda | 0f9b2b2 |
 | Gustavo Alexandre Barros Souza | Seletor de cor de preenchimento | 99f70db |
+| Gustavo Alexandre Barros Souza | Adição do botão "Clear" | cc3af63 |
+
 
 ## Entrega 2 — `OO.1` (25/06)
 
