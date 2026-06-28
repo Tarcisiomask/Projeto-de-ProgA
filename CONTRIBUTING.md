@@ -15,6 +15,6 @@ Registro de quem fez o quê em cada entrega.
 
 | Integrante | Tarefa | Commit(s) |
 |---|---|---|
-|  |  |  |
+| Gabriel de Sena Barbosa | Desenhos de Polígonos | 828fcd7 |
 
 <!-- Repetir a tabela para cada nova entrega -->
