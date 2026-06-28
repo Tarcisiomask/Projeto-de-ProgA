@@ -119,30 +119,37 @@ class Oval(Figura):
     def incompleta(self) -> bool:
         return (self.x1, self.y1) == (self.x2, self.y2)
 
-class Triangulo(Figura):
-    def __init__(self, x1: int, y1: int, cor_borda: str = "black", cor_preenchimento: str = ""):
+
+class Poligono(Figura):
+    def __init__(self, x, y, cor_borda="black", cor_preenchimento=""):
         super().__init__(cor_borda, cor_preenchimento)
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x1
-        self.y2 = y1
-        self.x3 = x1
-        self.y3 = y1 
+        self.pontos = [(x, y)] # lista de vértices
+        self.mouse_x = x # posição do mouse para a prévia
+        self.mouse_y = y
 
-    def atualizar(self, x: int, y: int) -> None:
-        self.x2 = x
-        self.y2 = y
-        self.x3 = (self.x1 + self.x2) / 2  # Base do triângulo
-        self.y3 = self.y1 - (self.x2 - self.x1) * 0.866  # Altura do triângulo equilátero
+    def adicionar_ponto(self, x, y):
+        self.pontos.append((x, y))
 
-    def desenhar(self, canvas: tk.Canvas) -> None:
-        canvas.create_polygon(self.x1, self.y1, self.x2, self.y2, self.x3, self.y3, outline=self.cor_borda, fill=self.cor_preenchimento)
+    def atualizar(self, x, y):
+        self.mouse_x = x
+        self.mouse_y = y
 
-    def desenhar_preview(self, canvas: tk.Canvas) -> None:
-        canvas.create_polygon(self.x1, self.y1, self.x2, self.y2, self.x3, self.y3, outline=self.cor_borda, fill=self.cor_preenchimento, dash=(4, 2))
+    def desenhar(self, canvas):
+        if len(self.pontos) >= 3:
+            lista = []
+            for x, y in self.pontos:
+                lista.extend([x, y])
+            canvas.create_polygon(*lista, outline=self.cor_borda, fill=self.cor_preenchimento)
 
-    def incompleta(self) -> bool:
-        return (self.x1, self.y1) == (self.x2, self.y2) == (self.x3, self.y3)
+    def desenhar_preview(self, canvas):
+        lista = []
+        for x, y in self.pontos:
+            lista.extend([x, y])
+        lista.extend([self.mouse_x, self.mouse_y])
+        canvas.create_line(*lista, fill=self.cor_borda, dash=(4,2))
+
+    def incompleta(self):
+        return len(self.pontos) < 3
 
 
 # =============================================================================
@@ -165,8 +172,14 @@ def iniciar_figura_nova(event):
         figura_nova = Retangulo(event.x, event.y, cor_borda_atual, cor_preenchimento_atual)
     elif tipo == "Oval":
         figura_nova = Oval(event.x, event.y, cor_borda_atual, cor_preenchimento_atual)
-    elif tipo == "Triângulo":
-        figura_nova = Triangulo(event.x, event.y, cor_borda_atual, cor_preenchimento_atual)
+    elif tipo == "Polígono":
+        if figura_nova is None:
+            figura_nova = Poligono(event.x,event.y,cor_borda_atual,cor_preenchimento_atual)
+        else:
+            figura_nova.adicionar_ponto(event.x, event.y)
+        desenhar()
+        figura_nova.desenhar_preview(canvas)
+        return
     # falta adicionar rabisco
 
 
@@ -179,9 +192,23 @@ def atualizar_figura_nova(event):
 
 
 def incluir_figura_nova(event):
+
+    global figura_nova
+    if isinstance(figura_nova, Poligono):
+        return
     if figura_nova is not None and not figura_nova.incompleta():
+
         figuras.append(figura_nova)
+    figura_nova = None
     desenhar()
+
+def finalizar_poligono(event):
+    global figura_nova
+    if isinstance(figura_nova, Poligono):
+        if not figura_nova.incompleta():
+            figuras.append(figura_nova)
+        figura_nova = None
+        desenhar()
 
 
 def desenhar():
@@ -237,7 +264,7 @@ def main():
 
     tipo_figura_var = tk.StringVar(root)
     ttk.OptionMenu(frame, tipo_figura_var,
-                   "Linha", "Linha", "Retângulo", "Oval", "Triângulo"
+                   "Linha", "Linha", "Retângulo", "Oval", "Polígono"
                    ).grid(column=1, row=0, sticky=tk.W, **paddings)
 
     ttk.Label(frame, text="Cor da borda:").grid(column=2, row=0, sticky=tk.W, **paddings)
@@ -265,6 +292,7 @@ def main():
     canvas.bind("<ButtonPress-1>", iniciar_figura_nova)
     canvas.bind("<B1-Motion>", atualizar_figura_nova)
     canvas.bind("<ButtonRelease-1>", incluir_figura_nova)
+    canvas.bind("<Button-3>", finalizar_poligono)
 
     root.mainloop()
 
