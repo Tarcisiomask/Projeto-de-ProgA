@@ -17,4 +17,10 @@ Registro de quem fez o quê em cada entrega.
 |---|---|---|
 | Gabriel de Sena Barbosa | Desenhos de Polígonos | 828fcd7 |
 | Gustavo Alexandre Barros Souza | Adição do botão "Clear" | cc3af63 |
+
+## Entrega 3 — `OO.1` (07/07/06)
+
+| Integrante | Tarefa | Commit(s) |
+|---|---|---|
+| Gustavo Alexandre Barros Souza | Definir classe ou classes para a visão. | 4835ced |
 <!-- Repetir a tabela para cada nova entrega -->
