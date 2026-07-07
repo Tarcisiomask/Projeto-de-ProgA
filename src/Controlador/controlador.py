@@ -51,7 +51,7 @@ class Controladorr:
             else:
                 self.Modelo.figura_nova.adicionar_ponto(event.x, event.y)
             self.redesenhar()
-            self.Modelo.figura_nova.desenhar_preview(self.visao.canvas)
+            self.Modelo.figura_nova.desenhar_preview(self.Visão.canvas)
             return
 
         classe = _FABRICA.get(tipo)
