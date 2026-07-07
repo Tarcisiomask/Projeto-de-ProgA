@@ -1,5 +1,5 @@
 from tkinter import colorchooser
-from modelo.figuras import Linha, MaoLivre, Oval, Circulo, Poligono
+from Modelo.figuras import Linha, MaoLivre, Oval, Circulo, Poligono
 
 
 # Mapeamento nome do menu → classe de figura
@@ -12,7 +12,7 @@ _FABRICA: dict[str, type] = {
 }
 
 
-class Controlador:
+class Controladorr:
     """
     Recebe eventos da visão, atualiza o modelo e pede à visão que se redesenhe.
 
@@ -21,8 +21,8 @@ class Controlador:
     """
 
     def __init__(self, modelo, visao):
-        self.modelo = modelo   # instância de Desenho
-        self.visao  = visao    # instância de JanelaPrincipal
+        self.Modelo = modelo   # instância de Desenho
+        self.Visão  = visao    # instância de JanelaPrincipal
 
     # ------------------------------------------------------------------
     # Redesenho
@@ -30,61 +30,61 @@ class Controlador:
 
     def redesenhar(self) -> None:
         """Apaga o canvas e redesenha todas as figuras do modelo."""
-        self.visao.limpar_canvas()
-        for fig in self.modelo:
-            fig.desenhar(self.visao.canvas)
+        self.Visão.limpar_canvas()
+        for fig in self.Modelo:
+            fig.desenhar(self.Visão.canvas)
 
     # ------------------------------------------------------------------
     # Criação de figuras
     # ------------------------------------------------------------------
 
     def iniciar_figura_nova(self, event) -> None:
-        tipo = self.visao.tipo_figura_selecionado()
+        tipo = self.Visão.tipo_figura_selecionado()
 
         if tipo == "Polígono":
-            if self.modelo.figura_nova is None:
-                self.modelo.figura_nova = Poligono(
+            if self.Modelo.figura_nova is None:
+                self.Modelo.figura_nova = Poligono(
                     event.x, event.y,
-                    self.visao.cor_borda_atual,
-                    self.visao.cor_preenchimento_atual,
+                    self.Visão.cor_borda_atual,
+                    self.Visão.cor_preenchimento_atual,
                 )
             else:
-                self.modelo.figura_nova.adicionar_ponto(event.x, event.y)
+                self.Modelo.figura_nova.adicionar_ponto(event.x, event.y)
             self.redesenhar()
-            self.modelo.figura_nova.desenhar_preview(self.visao.canvas)
+            self.Modelo.figura_nova.desenhar_preview(self.visao.canvas)
             return
 
         classe = _FABRICA.get(tipo)
         if classe:
-            self.modelo.figura_nova = classe(
+            self.Modelo.figura_nova = classe(
                 event.x, event.y,
-                self.visao.cor_borda_atual,
-                self.visao.cor_preenchimento_atual,
+                self.Visão.cor_borda_atual,
+                self.Visão.cor_preenchimento_atual,
             )
 
     def atualizar_figura_nova(self, event) -> None:
-        if self.modelo.figura_nova is None:
+        if self.Modelo.figura_nova is None:
             return
-        self.modelo.figura_nova.atualizar(event.x, event.y)
+        self.Modelo.figura_nova.atualizar(event.x, event.y)
         self.redesenhar()
-        self.modelo.figura_nova.desenhar_preview(self.visao.canvas)
+        self.Modelo.figura_nova.desenhar_preview(self.Visão.canvas)
 
     def incluir_figura_nova(self, event) -> None:
-        fig = self.modelo.figura_nova
+        fig = self.Modelo.figura_nova
         if isinstance(fig, Poligono):
             return
         if fig is not None and not fig.incompleta():
-            self.modelo.adicionar(fig)
-        self.modelo.figura_nova = None
+            self.Modelo.adicionar(fig)
+        self.Modelo.figura_nova = None
         self.redesenhar()
 
     def finalizar_poligono(self, event) -> None:
         """Enter: fecha o polígono livre se tiver vértices suficientes."""
-        fig = self.modelo.figura_nova
+        fig = self.Modelo.figura_nova
         if isinstance(fig, Poligono):
             if not fig.incompleta():
-                self.modelo.adicionar(fig)
-            self.modelo.figura_nova = None
+                self.Modelo.adicionar(fig)
+            self.Modelo.figura_nova = None
             self.redesenhar()
 
     # ------------------------------------------------------------------
@@ -92,29 +92,29 @@ class Controlador:
     # ------------------------------------------------------------------
 
     def iniciar_redimensionamento_ultima(self, event) -> None:
-        ultima = self.modelo.ultima()
+        ultima = self.Modelo.ultima()
         if ultima:
             ultima.iniciar_redimensionamento(event.x, event.y)
 
     def redimensionar_ultima(self, event) -> None:
-        ultima = self.modelo.ultima()
+        ultima = self.Modelo.ultima()
         if ultima is None:
             return
         ultima.redimensionar(event.x, event.y)
         self.redesenhar()
-        if self.modelo.figura_nova is not None:
-            self.modelo.figura_nova.desenhar_preview(self.visao.canvas)
+        if self.Modelo.figura_nova is not None:
+            self.Modelo.figura_nova.desenhar_preview(self.Visão.canvas)
 
     # ------------------------------------------------------------------
     # Prévia do polígono
     # ------------------------------------------------------------------
 
     def mover_preview_poligono(self, event) -> None:
-        fig = self.modelo.figura_nova
+        fig = self.Modelo.figura_nova
         if isinstance(fig, Poligono):
             fig.atualizar(event.x, event.y)
             self.redesenhar()
-            fig.desenhar_preview(self.visao.canvas)
+            fig.desenhar_preview(self.Visão.canvas)
 
     # ------------------------------------------------------------------
     # Cores
@@ -122,26 +122,26 @@ class Controlador:
 
     def escolher_cor_borda(self) -> None:
         cor = colorchooser.askcolor(
-            color=self.visao.cor_borda_atual, title="Cor da borda"
+            color=self.Visão.cor_borda_atual, title="Cor da borda"
         )[1]
         if cor:
-            self.visao.definir_cor_borda(cor)
+            self.Visão.definir_cor_borda(cor)
 
     def escolher_cor_preenchimento(self) -> None:
         cor = colorchooser.askcolor(
-            color=self.visao.cor_preenchimento_atual or "white",
+            color=self.Visão.cor_preenchimento_atual or "white",
             title="Cor de preenchimento",
         )[1]
         if cor:
-            self.visao.definir_cor_preenchimento(cor)
+            self.Visão.definir_cor_preenchimento(cor)
 
     def remover_preenchimento(self) -> None:
-        self.visao.definir_cor_preenchimento("")
+        self.Visão.definir_cor_preenchimento("")
 
     # ------------------------------------------------------------------
     # Outras ações
     # ------------------------------------------------------------------
 
     def limpar_tela(self) -> None:
-        self.modelo.limpar()
+        self.Modelo.limpar()
         self.redesenhar()
