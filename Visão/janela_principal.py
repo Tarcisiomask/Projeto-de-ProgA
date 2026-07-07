@@ -1,97 +1,122 @@
 import tkinter as tk
 from tkinter import ttk
 
+
 class JanelaPrincipal:
     """
-    Classe responsável APENAS pela interface gráfica (View no MVC).
-    Não contém regras de negócio nem gere o estado dos dados.
+    Responsável exclusivamente por construir e exibir a interface gráfica.
+
+    Não toma nenhuma decisão de negócio: delega tudo ao Controlador.
+    Expõe ao Controlador apenas o necessário:
+      - canvas          → para as figuras se desenharem
+      - cor_borda_atual / cor_preenchimento_atual → lidas na criação de figuras
+      - tipo_figura_selecionado()  → qual ferramenta está ativa
+      - definir_cor_borda/preenchimento() → atualiza cor e a amostra visual
+      - limpar_canvas() → apaga o canvas (chamado pelo Controlador antes de redesenhar)
     """
-    def __init__(self, root: tk.Tk):
-        self.root = root
-        self.root.title("Ferramenta de Desenho - Padrão MVC")
-        
-        # Frame principal para conter os elementos
-        self.frame = tk.Frame(self.root)
-        self.frame.pack(padx=10, pady=10)
-        
-        self.paddings = {'padx': 5, 'pady': 5}
-        
-        # Inicializa todos os botões, menus e o canvas
-        self._criar_interface()
 
-    def _criar_interface(self):
-        # Seletor de Ferramenta
-        ttk.Label(self.frame, text='Ferramenta:').grid(column=0, row=0, sticky=tk.W, **self.paddings)
-        self.tipo_figura_var = tk.StringVar(self.root)
-        self.tipo_figura_var.set("Linha") # Valor por defeito
-        
-        self.option_menu = ttk.OptionMenu(self.frame, self.tipo_figura_var, "Linha", "Linha", "Rabisco", "Retângulo", "Oval")
-        self.option_menu.grid(column=1, row=0, sticky=tk.W, **self.paddings)
-        
-        # Cor da Borda
-        ttk.Label(self.frame, text="Cor da borda:").grid(column=2, row=0, sticky=tk.W, **self.paddings)
-        self.amostra_borda = tk.Label(self.frame, bg="black", width=3, relief=tk.SUNKEN)
-        self.amostra_borda.grid(column=3, row=0, sticky=tk.W, **self.paddings)
-        
-        self.botao_cor_borda = ttk.Button(self.frame, text="Escolher...")
-        self.botao_cor_borda.grid(column=4, row=0, sticky=tk.W, **self.paddings)
-        
-        # Cor de Preenchimento
-        ttk.Label(self.frame, text="Preenchimento:").grid(column=0, row=1, sticky=tk.W, **self.paddings)
-        self.amostra_preenchimento = tk.Label(self.frame, bg="white", width=3, relief=tk.SUNKEN)
-        self.amostra_preenchimento.grid(column=1, row=1, sticky=tk.W, **self.paddings)
-        
-        self.botao_cor_preenchimento = ttk.Button(self.frame, text="Escolher...")
-        self.botao_cor_preenchimento.grid(column=2, row=1, sticky=tk.W, **self.paddings)
-        
-        self.botao_sem_preenchimento = ttk.Button(self.frame, text="Sem preench.")
-        self.botao_sem_preenchimento.grid(column=3, row=1, columnspan=2, sticky=tk.W, **self.paddings)
-        
-        # Botão Limpar Tela
-        self.botao_limpar = ttk.Button(self.frame, text="Limpar Tela")
-        self.botao_limpar.grid(column=5, row=1, sticky=tk.W, **self.paddings)
-        
-        # Área de Desenho (Canvas)
-        self.canvas = tk.Canvas(self.frame, bg='white', width=600, height=600)
-        self.canvas.grid(column=0, row=2, columnspan=6, sticky=(tk.N, tk.W, tk.E, tk.S))
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Ferramenta de Desenho")
+        self.root.geometry("750x750")
 
-    def associar_controlador(self, controlador):
-        """
-        Delega as ações da interface para o Controlador. 
-        A Visão não processa os cliques, apenas avisa quem sabe processar.
-        """
-        # Liga os cliques nos botões aos métodos do controlador
-        self.botao_cor_borda.config(command=controlador.escolher_cor_borda)
-        self.botao_cor_preenchimento.config(command=controlador.escolher_cor_preenchimento)
-        self.botao_sem_preenchimento.config(command=controlador.remover_preenchimento)
-        self.botao_limpar.config(command=controlador.limpar_tela)
-        
-        # Liga os eventos físicos do rato no Canvas ao controlador
-        self.canvas.bind("<Button-1>", controlador.ao_clicar_rato)
-        self.canvas.bind("<B1-Motion>", controlador.ao_arrastar_rato)
-        self.canvas.bind("<ButtonRelease-1>", controlador.ao_soltar_rato)
+        self.cor_borda_atual        = "black"
+        self.cor_preenchimento_atual = ""
 
-    def obter_ferramenta_selecionada(self) -> str:
-        """Devolve ao controlador qual a ferramenta (figura) escolhida na dropdown."""
-        return self.tipo_figura_var.get()
+        self._construir_widgets()
 
-    def atualizar_amostras_cores(self, cor_borda: str, cor_preenchimento: str):
-        """Atualiza visualmente os quadrados de cores na interface."""
-        self.amostra_borda.config(bg=cor_borda)
-        # Se a cor de preenchimento for vazia (transparente), mostramos branco no seletor
-        bg_preenchimento = cor_preenchimento if cor_preenchimento != "" else "white"
-        self.amostra_preenchimento.config(bg=bg_preenchimento)
+    # ------------------------------------------------------------------
+    # Construção dos widgets
+    # ------------------------------------------------------------------
 
-    def renderizar_figuras(self, lista_figuras, figura_em_andamento=None):
-        """
-        Limpa o Canvas e pede a cada objeto 'Figura' do Modelo que se desenhe.
-        """
+    def _construir_widgets(self) -> None:
+        frame = tk.Frame(self.root)
+        frame.pack(expand=True, anchor="center")
+        pad = {"padx": 5, "pady": 5}
+
+        # — Linha 0: seletor de ferramenta e cor de borda —
+        ttk.Label(frame, text="Ferramenta:").grid(column=0, row=0, sticky=tk.W, **pad)
+
+        self._tipo_figura_var = tk.StringVar(self.root)
+        ttk.OptionMenu(
+            frame, self._tipo_figura_var,
+            "Linha",
+            "Linha", "Mão livre", "Oval", "Círculo", "Polígono",
+        ).grid(column=1, row=0, sticky=tk.W, **pad)
+
+        ttk.Label(frame, text="Cor da borda:").grid(column=2, row=0, sticky=tk.W, **pad)
+        self._amostra_borda = tk.Label(frame, bg=self.cor_borda_atual, width=3, relief=tk.SUNKEN)
+        self._amostra_borda.grid(column=3, row=0, sticky=tk.W, **pad)
+        self._btn_cor_borda = ttk.Button(frame, text="Escolher...")
+        self._btn_cor_borda.grid(column=4, row=0, sticky=tk.W, **pad)
+
+        # — Linha 1: cor de preenchimento —
+        ttk.Label(frame, text="Preenchimento:").grid(column=0, row=1, sticky=tk.W, **pad)
+        self._amostra_preenchimento = tk.Label(frame, bg="white", width=3, relief=tk.SUNKEN)
+        self._amostra_preenchimento.grid(column=1, row=1, sticky=tk.W, **pad)
+        self._btn_cor_preenchimento = ttk.Button(frame, text="Escolher...")
+        self._btn_cor_preenchimento.grid(column=2, row=1, sticky=tk.W, **pad)
+        self._btn_sem_preenchimento = ttk.Button(frame, text="Sem preenchimento")
+        self._btn_sem_preenchimento.grid(column=3, row=1, columnspan=2, sticky=tk.W, **pad)
+
+        # — Linha 2: botão limpar + dica —
+        self._btn_limpar = ttk.Button(frame, text="Limpar")
+        self._btn_limpar.grid(column=0, row=2, sticky=tk.W, **pad)
+        ttk.Label(
+            frame,
+            text="Polígono livre: clique = vértice | Enter = fechar\n"
+                 "Botão direito + arrasto = redimensionar última figura",
+            foreground="gray",
+        ).grid(column=1, row=2, columnspan=4, sticky=tk.W, **pad)
+
+        # — Linha 3: canvas de desenho —
+        self.canvas = tk.Canvas(
+            frame, bg="white", width=600, height=600,
+            relief=tk.RAISED, bd=2,
+        )
+        self.canvas.grid(column=0, row=3, columnspan=5, sticky=tk.W, **pad)
+
+    # ------------------------------------------------------------------
+    # Conexão com o Controlador
+    # (chamado pelo main.py depois que o Controlador é criado)
+    # ------------------------------------------------------------------
+
+    def configurar_eventos(self, controlador) -> None:
+        """Conecta todos os widgets e eventos ao Controlador."""
+
+        # Botões da barra de ferramentas
+        self._btn_cor_borda.config(command=controlador.escolher_cor_borda)
+        self._btn_cor_preenchimento.config(command=controlador.escolher_cor_preenchimento)
+        self._btn_sem_preenchimento.config(command=controlador.remover_preenchimento)
+        self._btn_limpar.config(command=controlador.limpar_tela)
+
+        # Eventos do canvas
+        self.canvas.bind("<ButtonPress-1>", controlador.iniciar_figura_nova)
+        self.canvas.bind("<B1-Motion>",     controlador.atualizar_figura_nova)
+        self.canvas.bind("<ButtonRelease-1>", controlador.incluir_figura_nova)
+
+        self.canvas.bind("<ButtonPress-3>", controlador.iniciar_redimensionamento_ultima)
+        self.canvas.bind("<ButtonPress-2>", controlador.iniciar_redimensionamento_ultima)
+        self.canvas.bind("<B3-Motion>",     controlador.redimensionar_ultima)
+        self.canvas.bind("<B2-Motion>",     controlador.redimensionar_ultima)
+
+        self.canvas.bind("<Motion>", controlador.mover_preview_poligono)
+        self.root.bind("<Return>",   controlador.finalizar_poligono)
+
+    # ------------------------------------------------------------------
+    # Interface que o Controlador usa
+    # ------------------------------------------------------------------
+
+    def tipo_figura_selecionado(self) -> str:
+        return self._tipo_figura_var.get()
+
+    def limpar_canvas(self) -> None:
         self.canvas.delete("all")
-        
-        # Desenha as figuras que já estão guardadas no Modelo
-        for figura in lista_figuras:
-            figura.desenhar(self.canvas)
-            
-        # Se houver um desenho a ser arrastado neste instante, desenha-o de forma tracejada
-        if figura_em_andamento:
-            figura_em_andamento.desenhar_preview(self.canvas)
+
+    def definir_cor_borda(self, cor: str) -> None:
+        self.cor_borda_atual = cor
+        self._amostra_borda.config(bg=cor)
+
+    def definir_cor_preenchimento(self, cor: str) -> None:
+        self.cor_preenchimento_atual = cor
+        self._amostra_preenchimento.config(bg=cor if cor else "white")
