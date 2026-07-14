@@ -1,6 +1,20 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
-import math #importante para o cálculo do círculo 
+import math
+
+# Função auxiliar matemática para calcular distância de um ponto a um segmento de reta
+def _dist_ponto_segmento(px: float, py: float, x1: float, y1: float, x2: float, y2: float) -> float:
+    tamanho_quadrado = (x2 - x1)**2 + (y2 - y1)**2
+    if tamanho_quadrado == 0:
+        return math.hypot(px - x1, py - y1)
+    
+    # Projeção do ponto no segmento
+    t = max(0, min(1, ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / tamanho_quadrado))
+    proj_x = x1 + t * (x2 - x1)
+    proj_y = y1 + t * (y2 - y1)
+    
+    return math.hypot(px - proj_x, py - proj_y)
+
 
 # =============================================================================
 # Hierarquia de classes
@@ -12,8 +26,6 @@ class Figura(ABC):
     def __init__(self, cor_borda: str = "black", cor_preenchimento: str = ""):
         self.cor_borda = cor_borda
         self.cor_preenchimento = cor_preenchimento
-
-    """Define a classe herdando de ABC, para que assim seja uma classe abstrata em python, salva também as cores padrões das bordas, o preto, e do preenchimento que é transparente representado pelo """
 
     @abstractmethod
     def desenhar(self, canvas: tk.Canvas) -> None:
@@ -31,13 +43,40 @@ class Figura(ABC):
     def incompleta(self) -> bool:
         """Retorna True se a figura ainda não tem dimensão mínima para ser salva."""
 
+    # -------------------------------------------------------------------------
+    # Redimensionamento
+    # -------------------------------------------------------------------------
     def iniciar_redimensionamento(self, x: int, y: int) -> None:
-        """Chamado no clique inicial antes do arraste de redimensionamento."""
         pass
 
     def redimensionar(self, x: int, y: int) -> None:
-        """Redimensiona a figura já salva. Por padrão delega a atualizar()."""
         self.atualizar(x, y)
+
+    # -------------------------------------------------------------------------
+    # Manipulação e Seleção (Entrega 5)
+    # -------------------------------------------------------------------------
+    @abstractmethod
+    def contem_ponto(self, x: int, y: int) -> bool:
+        """Retorna True se a coordenada (x, y) bater (colidir) com a figura."""
+
+    @abstractmethod
+    def mover(self, dx: int, dy: int) -> None:
+        """Desloca toda a figura nos eixos x e y."""
+
+    @abstractmethod
+    def bbox(self) -> tuple[int, int, int, int]:
+        """Retorna a caixa delimitadora da figura: (min_x, min_y, max_x, max_y)."""
+
+    def desenhar_selecionado(self, canvas: tk.Canvas) -> None:
+        """Desenha uma borda azul ao redor da bounding box da figura selecionada."""
+        if self.incompleta():
+            return
+        x1, y1, x2, y2 = self.bbox()
+        pad = 4  # Margem de respiro para a seleção
+        canvas.create_rectangle(
+            x1 - pad, y1 - pad, x2 + pad, y2 + pad,
+            outline="blue", dash=(4, 4), width=1.5, tags="selecao"
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -47,16 +86,14 @@ class Figura(ABC):
 class Linha(Figura):
     def __init__(self, x1: int, y1: int, cor_borda: str = "black", cor_preenchimento: str = ""):
         super().__init__(cor_borda, cor_preenchimento)
-        self.x1 = x1 # X inicial 
-        self.y1 = y1 # Y inicial 
-        self.x2 = x1 # X final 
-        self.y2 = y1 # Y final
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x1
+        self.y2 = y1
 
     def atualizar(self, x: int, y: int) -> None:
         self.x2 = x
         self.y2 = y
-
-        ''' Atualiza apenas os X e Y finais, deixando os iniciais estáticos'''
 
     def desenhar(self, canvas: tk.Canvas) -> None:
         canvas.create_line(self.x1, self.y1, self.x2, self.y2, fill=self.cor_borda)
@@ -64,38 +101,34 @@ class Linha(Figura):
     def desenhar_preview(self, canvas: tk.Canvas) -> None:
         canvas.create_line(self.x1, self.y1, self.x2, self.y2, fill=self.cor_borda, dash=(4, 2))
 
-        ''' o dash=(4,2) significa que será criado um traço de 4 pixels em que a cada 2 pixels ou eles são preenchidos ou ficam vazios, é a lógica do tracejado das figuras incompletas'''
-
     def incompleta(self) -> bool:
         return (self.x1, self.y1) == (self.x2, self.y2)
 
+    def mover(self, dx: int, dy: int) -> None:
+        self.x1 += dx
+        self.y1 += dy
+        self.x2 += dx
+        self.y2 += dy
+
+    def bbox(self) -> tuple[int, int, int, int]:
+        return min(self.x1, self.x2), min(self.y1, self.y2), max(self.x1, self.x2), max(self.y1, self.y2)
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        TOLERANCIA = 5.0
+        return _dist_ponto_segmento(x, y, self.x1, self.y1, self.x2, self.y2) <= TOLERANCIA
+
 
 class MaoLivre(Figura):
-    """Traço livre composto por todos os pontos percorridos pelo mouse."""
-
     def __init__(self, x: int, y: int, cor_borda: str = "black", cor_preenchimento: str = ""):
         super().__init__(cor_borda, cor_preenchimento)
         self.pontos: list[tuple[int, int]] = [(x, y)]
 
-        ''' self.pontos é uma lista de tuplas que recebem dois valores int, em que o primeiro é sempre o valor do x e o segundo é sempre o valor do y, é uma remodelação da versão original'''
-
     def atualizar(self, x: int, y: int) -> None:
         self.pontos.append((x, y))
 
-        ''' para atualizar a mão livre é só adicionar cada novo ponto selecionado pelo usuário pelo arrasto do mouse a lista de tuplas que definimos acima'''
-
     def iniciar_redimensionamento(self, x: int, y: int) -> None:
         self._pontos_base = list(self.pontos)
-        self._min_x = min(p[0] for p in self.pontos)
-        self._min_y = min(p[1] for p in self.pontos)
-        self._max_x = max(p[0] for p in self.pontos)
-        self._max_y = max(p[1] for p in self.pontos)
-
-        ''' A lógica aqui é a seguinte:
-        - Primeiro nós fazemos uma "fotografia" da figura desenhada pelo modo de mão livre de forma a salvar de forma exata todos os pontos da forma original, é preciso ser assim para não corromper o formato desenhado no aumento ou redução de escala
-        - o min_x e o max_x pegam a menor e a maior coordenada horizontal da figura
-        - o min_y e o max_y pegam a maenor e a maior coordenada vertical da figura
-        É preciso ser assim porque essa feature só funciona do jeito certo com uma caixa delimitadora porque desse jeito temos salvos todos os pontos, os menores e maiores pontos x e y, além de um "retrato" de onde estão esses maiores e menores valores, dessa forma temos então a "fotografia verdadeira" de toda a figura '''
+        self._min_x, self._min_y, self._max_x, self._max_y = self.bbox()
 
     def redimensionar(self, x: int, y: int) -> None:
         if not hasattr(self, '_pontos_base'):
@@ -103,12 +136,8 @@ class MaoLivre(Figura):
 
         larg_base = self._max_x - self._min_x
         alt_base = self._max_y - self._min_y
-
         if larg_base == 0: larg_base = 1
         if alt_base == 0: alt_base = 1
-
-        ''' o primeiro if serve apenas como trava de segurança, se por algum motivo o clique inicial for perdido, a função anterior é executada a força, sim eu peguei trauma quando não consegui fazer o ponto inicial ser processado na aula
-        o larg_base e o alt_base serve apenas para definir a altura e largura originais da figura em pixels, com os ifs subsequentes servindo como forma de assegurar que não vai existir nenhuma divisão por 0, o que poderia travar o programa'''
 
         escala_x = (x - self._min_x) / larg_base
         escala_y = (y - self._min_y) / alt_base
@@ -130,10 +159,24 @@ class MaoLivre(Figura):
     def incompleta(self) -> bool:
         return len(self.pontos) <= 1
 
+    def mover(self, dx: int, dy: int) -> None:
+        self.pontos = [(px + dx, py + dy) for px, py in self.pontos]
+
+    def bbox(self) -> tuple[int, int, int, int]:
+        xs = [p[0] for p in self.pontos]
+        ys = [p[1] for p in self.pontos]
+        return min(xs), min(ys), max(xs), max(ys)
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        TOLERANCIA = 5.0
+        for i in range(len(self.pontos) - 1):
+            p1, p2 = self.pontos[i], self.pontos[i+1]
+            if _dist_ponto_segmento(x, y, p1[0], p1[1], p2[0], p2[1]) <= TOLERANCIA:
+                return True
+        return False
+
 
 class Oval(Figura):
-    """Elipse definida por dois cantos opostos do retângulo delimitador."""
-
     def __init__(self, x1: int, y1: int, cor_borda: str = "black", cor_preenchimento: str = ""):
         super().__init__(cor_borda, cor_preenchimento)
         self.x1 = x1
@@ -154,46 +197,71 @@ class Oval(Figura):
     def incompleta(self) -> bool:
         return (self.x1, self.y1) == (self.x2, self.y2)
 
-''' Tudo em oval funciona do mesmo jeito que funciona em linha, então as mesmas explicações se aplicam também, mudando apenas a função de criação para create_oval'''
+    def mover(self, dx: int, dy: int) -> None:
+        self.x1 += dx
+        self.y1 += dy
+        self.x2 += dx
+        self.y2 += dy
+
+    def bbox(self) -> tuple[int, int, int, int]:
+        return min(self.x1, self.x2), min(self.y1, self.y2), max(self.x1, self.x2), max(self.y1, self.y2)
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        # Ponto central e raios da elipse
+        cx = (self.x1 + self.x2) / 2
+        cy = (self.y1 + self.y2) / 2
+        rx = abs(self.x1 - self.x2) / 2
+        ry = abs(self.y1 - self.y2) / 2
+
+        if rx == 0 or ry == 0: return False
+
+        # Equação da elipse: (x-cx)^2/rx^2 + (y-cy)^2/ry^2 <= 1
+        valor = ((x - cx)**2) / (rx**2) + ((y - cy)**2) / (ry**2)
+        
+        if self.cor_preenchimento:
+            return valor <= 1.0
+        else:
+            # Se não tem preenchimento, verifica colisão apenas perto da borda (anel)
+            return 0.8 <= valor <= 1.2
 
 
 class Circulo(Figura):
-    """Círculo definido por centro e raio."""
-
     def __init__(self, cx: int, cy: int, cor_borda: str = "black", cor_preenchimento: str = ""):
         super().__init__(cor_borda, cor_preenchimento)
         self.cx = cx
         self.cy = cy
         self.raio = 0
 
-        ''' A principal diferença entre o círculo e as outras figuras é que os pontos salvos representam os valores X e Y do centro da figura, fiz dessa forma para ficar mais fácil, enquanto que o raio tem como valor padrão o 0, o que é uma escolha de design nossa, dá para ele ter valores iniciais expressivos também'''
-
     def atualizar(self, x: int, y: int) -> None:
         self.raio = int(math.hypot(x - self.cx, y - self.cy))
 
-        ''' É justamente a função math.hypot que torna possível a criação do círculo já que ela calcula a distância em linha reta entre o centro (o clique inicial) e onde o mouse está no momento (calculando a hipotenusa de um triângulo retângulo imaginário) o que defini o tamanho exato do raio'''
-
-    def _bbox(self) -> tuple[int, int, int, int]:
+    def bbox(self) -> tuple[int, int, int, int]:
         r = self.raio
         return self.cx - r, self.cy - r, self.cx + r, self.cy + r
 
-        ''' O Tkinter não tem uma função própria para a criação de círculos, então a ideia é criar um "quaadrado invisível" que envolve o círculo, dessa forma a função calcula os 4 cantos dessa caixa inviśivel subtraindo e somando o raio do centro, as funções desenhar e desenhar_preview apenas passam desse "quadrado" para o Tkinter'''
-
     def desenhar(self, canvas: tk.Canvas) -> None:
-        canvas.create_oval(*self._bbox(), outline=self.cor_borda, fill=self.cor_preenchimento)
+        canvas.create_oval(*self.bbox(), outline=self.cor_borda, fill=self.cor_preenchimento)
 
     def desenhar_preview(self, canvas: tk.Canvas) -> None:
-        canvas.create_oval(*self._bbox(), outline=self.cor_borda, fill=self.cor_preenchimento, dash=(4, 2))
-
-        '''a ideia do create_oval é porque uma figura oval é uma elipse e um círculo pode ser considerado uma elipse com excentricidade 0, ou seja, com os eixos vertical e horizontal com o mesmo tamanho, se usarmos os valores dessa função como os valores do "quadrado invisível" que formamos geometricamente temos um círculo'''
+        canvas.create_oval(*self.bbox(), outline=self.cor_borda, fill=self.cor_preenchimento, dash=(4, 2))
 
     def incompleta(self) -> bool:
         return self.raio == 0
 
+    def mover(self, dx: int, dy: int) -> None:
+        self.cx += dx
+        self.cy += dy
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        distancia = math.hypot(x - self.cx, y - self.cy)
+        if self.cor_preenchimento:
+            return distancia <= self.raio
+        else:
+            # Tolerância para acertar só a borda
+            return abs(distancia - self.raio) <= 5.0
+
 
 class Poligono(Figura):
-    """Polígono livre construído clique a clique."""
-    
     def __init__(self, x: int, y: int, cor_borda: str = "black", cor_preenchimento: str = ""):
         super().__init__(cor_borda, cor_preenchimento)
         self.pontos: list[tuple[int, int]] = [(x, y)]
@@ -204,26 +272,19 @@ class Poligono(Figura):
         self.pontos.append((x, y))
 
     def atualizar(self, x: int, y: int) -> None:
-        """Durante a construção: move apenas o cursor de prévia, sem adicionar vértice."""
         self.mouse_x = x
         self.mouse_y = y
 
     def iniciar_redimensionamento(self, x: int, y: int) -> None:
-        """Salva a geometria base do polígono para cálculo de proporção."""
         self._pontos_base = list(self.pontos)
-        self._min_x = min(p[0] for p in self.pontos)
-        self._min_y = min(p[1] for p in self.pontos)
-        self._max_x = max(p[0] for p in self.pontos)
-        self._max_y = max(p[1] for p in self.pontos)
+        self._min_x, self._min_y, self._max_x, self._max_y = self.bbox()
 
     def redimensionar(self, x: int, y: int) -> None:
-        """Aplica escala nos vértices tendo o canto superior esquerdo como âncora."""
         if not hasattr(self, '_pontos_base'):
             self.iniciar_redimensionamento(x, y)
 
         larg_base = self._max_x - self._min_x
         alt_base = self._max_y - self._min_y
-
         if larg_base == 0: larg_base = 1
         if alt_base == 0: alt_base = 1
 
@@ -235,8 +296,6 @@ class Poligono(Figura):
              int(self._min_y + (p[1] - self._min_y) * escala_y))
             for p in self._pontos_base
         ]
-
-        ''' As duas funções de redimensionamento seguem a mesma ideia tanto para os polígonos quanto para a mão livre porque as duas figuras são "complexas" do ponto de vista que não existe uma forma padrão para elas, por isso essa é a forma que encontramos de fazer iso funcionar'''
 
     def desenhar(self, canvas: tk.Canvas) -> None:
         if not self.incompleta():
@@ -251,3 +310,40 @@ class Poligono(Figura):
 
     def incompleta(self) -> bool:
         return len(self.pontos) < 3
+
+    def mover(self, dx: int, dy: int) -> None:
+        self.pontos = [(px + dx, py + dy) for px, py in self.pontos]
+
+    def bbox(self) -> tuple[int, int, int, int]:
+        xs = [p[0] for p in self.pontos]
+        ys = [p[1] for p in self.pontos]
+        return min(xs), min(ys), max(xs), max(ys)
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        # Se tem preenchimento, usa Ray Casting
+        if self.cor_preenchimento:
+            n = len(self.pontos)
+            dentro = False
+            p1x, p1y = self.pontos[0]
+            for i in range(n + 1):
+                p2x, p2y = self.pontos[i % n]
+                if y > min(p1y, p2y):
+                    if y <= max(p1y, p2y):
+                        if x <= max(p1x, p2x):
+                            if p1y != p2y:
+                                xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                            if p1x == p2x or x <= xinters:
+                                dentro = not dentro
+                p1x, p1y = p2x, p2y
+            return dentro
+            
+        # Se não tem preenchimento, verifica se o clique bateu na linha do perímetro
+        else:
+            TOLERANCIA = 5.0
+            n = len(self.pontos)
+            for i in range(n):
+                p1 = self.pontos[i]
+                p2 = self.pontos[(i + 1) % n] # Liga o último ao primeiro
+                if _dist_ponto_segmento(x, y, p1[0], p1[1], p2[0], p2[1]) <= TOLERANCIA:
+                    return True
+            return False

@@ -41,7 +41,7 @@ class JanelaPrincipal:
         ttk.OptionMenu(
             frame, self._tipo_figura_var,
             "Linha",
-            "Linha", "Mão livre", "Oval", "Círculo", "Polígono",
+            "Selecionar", "Linha", "Mão livre", "Oval", "Círculo", "Polígono",
         ).grid(column=1, row=0, sticky=tk.W, **pad)
 
         ttk.Label(frame, text="Cor da borda:").grid(column=2, row=0, sticky=tk.W, **pad)
