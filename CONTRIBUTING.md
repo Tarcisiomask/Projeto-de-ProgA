@@ -32,4 +32,5 @@ Registro de quem fez o quê em cada entrega.
 | Integrante | Tarefa | Commit(s) |
 |---|---|---|
 | Gustavo Alexandre Barros Souza | adiciona métodos de serialização to_dict e from_dict para as classes Figura, Linha, Retangulo, Rabisco e Oval | 1f2e068 |
+| Pedro Lucas de Jesus Vasconcelos | Testes Unitários | f26ea9f |
 <!-- Repetir a tabela para cada nova entrega -->
