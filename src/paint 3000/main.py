@@ -11,7 +11,10 @@ def main():
     modelo = Desenho()
     visao  = JanelaPrincipal()
     controlador = Controlador(modelo, visao)
-    visao.configurar_eventos(controlador)
+    
+    # O Controlador agora organiza a bagunça!
+    controlador.configurar_eventos()
+    
     visao.root.mainloop()
 
 

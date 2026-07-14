@@ -9,7 +9,6 @@ from controlador.estados import (
     EstadoPoligono,
 )
 
-
 # Mapeamento nome do menu → classe de estado.
 # Para adicionar uma nova ferramenta: criar EstadoX e incluir aqui.
 _ESTADOS: dict[str, type[ToolState]] = {
@@ -37,7 +36,41 @@ class Controlador:
         self.estado_atual: ToolState = EstadoLinha(self)
 
     # ------------------------------------------------------------------
-    # Troca de ferramenta (chamada pela visão quando o menu muda)
+    # Configuração de Inputs (Mouse, Teclado e Interface)
+    # ------------------------------------------------------------------
+    def configurar_eventos(self) -> None:
+        """O Controlador assume a responsabilidade de 'ouvir' a Visão e os periféricos."""
+        
+        # Escutando a mudança do menu de ferramentas
+        self.visao._tipo_figura_var.trace_add(
+            "write", 
+            lambda *args: self.trocar_ferramenta(self.visao.tipo_figura_selecionado())
+        )
+
+        # Escutando os botões da interface
+        self.visao._btn_cor_borda.config(command=self.escolher_cor_borda)
+        self.visao._btn_cor_preenchimento.config(command=self.escolher_cor_preenchimento)
+        self.visao._btn_sem_preenchimento.config(command=self.remover_preenchimento)
+        self.visao._btn_limpar.config(command=self.limpar_tela)
+
+        # Escutando o Mouse no Canvas
+        self.visao.canvas.bind("<ButtonPress-1>", self.iniciar_figura_nova)
+        self.visao.canvas.bind("<B1-Motion>",     self.atualizar_figura_nova)
+        self.visao.canvas.bind("<ButtonRelease-1>", self.incluir_figura_nova)
+
+        self.visao.canvas.bind("<ButtonPress-3>", self.iniciar_redimensionamento_ultima)
+        self.visao.canvas.bind("<ButtonPress-2>", self.iniciar_redimensionamento_ultima)
+        self.visao.canvas.bind("<B3-Motion>",     self.redimensionar_ultima)
+        self.visao.canvas.bind("<B2-Motion>",     self.redimensionar_ultima)
+
+        self.visao.canvas.bind("<Motion>", self.mover_preview_poligono)
+        
+        # Escutando o Teclado
+        self.visao.root.bind("<Return>", self.finalizar_poligono)
+
+
+    # ------------------------------------------------------------------
+    # Troca de ferramenta (chamada quando o menu muda)
     # ------------------------------------------------------------------
 
     def trocar_ferramenta(self, nome: str) -> None:
