@@ -25,5 +25,5 @@ Registro de quem fez o quê em cada entrega.
 |---|---|---|
 | Gustavo Alexandre Barros Souza | Definir classe ou classes para a visão. | 4835ced |
 | Pedro Lucas de Jesus Vasconcelos | Novo Main | af5efb3 |
-| Gabriel de Sena Barbosa | Organizando estrutura de pastas e controlador | 4b41d27e278876a0501f3713891bd921e9ebb1b1|
+| Gabriel de Sena Barbosa | Organizando estrutura de pastas e controlador | 4b41d27 |
 <!-- Repetir a tabela para cada nova entrega -->
