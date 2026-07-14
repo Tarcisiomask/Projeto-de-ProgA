@@ -26,4 +26,10 @@ Registro de quem fez o quê em cada entrega.
 | Gustavo Alexandre Barros Souza | Definir classe ou classes para a visão. | 4835ced |
 | Pedro Lucas de Jesus Vasconcelos | Novo Main | af5efb3 |
 | Gabriel de Sena Barbosa | Organizando estrutura de pastas e controlador | 4b41d27 |
+
+## Entrega 4 — `OO.1` (07/07/06)
+
+| Integrante | Tarefa | Commit(s) |
+|---|---|---|
+| Gustavo Alexandre Barros Souza | adiciona métodos de serialização to_dict e from_dict para as classes Figura, Linha, Retangulo, Rabisco e Oval | 1f2e068 |
 <!-- Repetir a tabela para cada nova entrega -->
