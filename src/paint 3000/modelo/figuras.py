@@ -43,6 +43,25 @@ class Figura(ABC):
     def incompleta(self) -> bool:
         """Retorna True se a figura ainda não tem dimensão mínima para ser salva."""
 
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """Serializa a figura para um dicionário."""
+
+    @staticmethod
+    def from_dict(dados: dict) -> "Figura":
+        tipo = dados.get("tipo")
+        if tipo == "Linha":
+            return Linha.from_dict(dados)
+        if tipo == "Retangulo":
+            return Retangulo.from_dict(dados)
+        if tipo == "Oval":
+            return Oval.from_dict(dados)
+        if tipo == "Rabisco":
+            return Rabisco.from_dict(dados)
+        if tipo == "MaoLivre":
+            return MaoLivre.from_dict(dados)
+        raise ValueError(f"Tipo de figura desconhecido: {tipo}")
+
     # -------------------------------------------------------------------------
     # Redimensionamento
     # -------------------------------------------------------------------------
@@ -117,8 +136,88 @@ class Linha(Figura):
         TOLERANCIA = 5.0
         return _dist_ponto_segmento(x, y, self.x1, self.y1, self.x2, self.y2) <= TOLERANCIA
 
+    def to_dict(self) -> dict:
+        return {
+            "tipo": "Linha",
+            "x1": self.x1,
+            "y1": self.y1,
+            "x2": self.x2,
+            "y2": self.y2,
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+        }
 
-class MaoLivre(Figura):
+    @classmethod
+    def from_dict(cls, dados: dict):
+        figura = cls(
+            dados["x1"],
+            dados["y1"],
+            dados.get("cor_borda", "black"),
+            dados.get("cor_preenchimento", ""),
+        )
+        figura.x2 = dados["x2"]
+        figura.y2 = dados["y2"]
+        return figura
+
+
+class Retangulo(Figura):
+    def __init__(self, x1: int, y1: int, cor_borda: str = "black", cor_preenchimento: str = ""):
+        super().__init__(cor_borda, cor_preenchimento)
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x1
+        self.y2 = y1
+
+    def atualizar(self, x: int, y: int) -> None:
+        self.x2 = x
+        self.y2 = y
+
+    def desenhar(self, canvas: tk.Canvas) -> None:
+        canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, outline=self.cor_borda, fill=self.cor_preenchimento)
+
+    def desenhar_preview(self, canvas: tk.Canvas) -> None:
+        canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, outline=self.cor_borda, fill=self.cor_preenchimento, dash=(4, 2))
+
+    def incompleta(self) -> bool:
+        return (self.x1, self.y1) == (self.x2, self.y2)
+
+    def mover(self, dx: int, dy: int) -> None:
+        self.x1 += dx
+        self.y1 += dy
+        self.x2 += dx
+        self.y2 += dy
+
+    def bbox(self) -> tuple[int, int, int, int]:
+        return min(self.x1, self.x2), min(self.y1, self.y2), max(self.x1, self.x2), max(self.y1, self.y2)
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        return self.x1 <= x <= self.x2 and self.y1 <= y <= self.y2 or self.x2 <= x <= self.x1 and self.y2 <= y <= self.y1
+
+    def to_dict(self) -> dict:
+        return {
+            "tipo": "Retangulo",
+            "x1": self.x1,
+            "y1": self.y1,
+            "x2": self.x2,
+            "y2": self.y2,
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+        }
+
+    @classmethod
+    def from_dict(cls, dados: dict):
+        figura = cls(
+            dados["x1"],
+            dados["y1"],
+            dados.get("cor_borda", "black"),
+            dados.get("cor_preenchimento", ""),
+        )
+        figura.x2 = dados["x2"]
+        figura.y2 = dados["y2"]
+        return figura
+
+
+class Rabisco(Figura):
     def __init__(self, x: int, y: int, cor_borda: str = "black", cor_preenchimento: str = ""):
         super().__init__(cor_borda, cor_preenchimento)
         self.pontos: list[tuple[int, int]] = [(x, y)]
@@ -136,8 +235,10 @@ class MaoLivre(Figura):
 
         larg_base = self._max_x - self._min_x
         alt_base = self._max_y - self._min_y
-        if larg_base == 0: larg_base = 1
-        if alt_base == 0: alt_base = 1
+        if larg_base == 0:
+            larg_base = 1
+        if alt_base == 0:
+            alt_base = 1
 
         escala_x = (x - self._min_x) / larg_base
         escala_y = (y - self._min_y) / alt_base
@@ -170,10 +271,39 @@ class MaoLivre(Figura):
     def contem_ponto(self, x: int, y: int) -> bool:
         TOLERANCIA = 5.0
         for i in range(len(self.pontos) - 1):
-            p1, p2 = self.pontos[i], self.pontos[i+1]
+            p1, p2 = self.pontos[i], self.pontos[i + 1]
             if _dist_ponto_segmento(x, y, p1[0], p1[1], p2[0], p2[1]) <= TOLERANCIA:
                 return True
         return False
+
+    def to_dict(self) -> dict:
+        return {
+            "tipo": self.__class__.__name__,
+            "pontos": [[px, py] for px, py in self.pontos],
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+        }
+
+    @classmethod
+    def from_dict(cls, dados: dict):
+        pontos = dados.get("pontos", [])
+        if pontos:
+            figura = cls(
+                pontos[0][0],
+                pontos[0][1],
+                dados.get("cor_borda", "black"),
+                dados.get("cor_preenchimento", ""),
+            )
+            figura.pontos = [(p[0], p[1]) for p in pontos]
+            return figura
+
+        figura = cls(0, 0, dados.get("cor_borda", "black"), dados.get("cor_preenchimento", ""))
+        figura.pontos = []
+        return figura
+
+
+class MaoLivre(Rabisco):
+    pass
 
 
 class Oval(Figura):
@@ -213,17 +343,40 @@ class Oval(Figura):
         rx = abs(self.x1 - self.x2) / 2
         ry = abs(self.y1 - self.y2) / 2
 
-        if rx == 0 or ry == 0: return False
+        if rx == 0 or ry == 0:
+            return False
 
         # Equação da elipse: (x-cx)^2/rx^2 + (y-cy)^2/ry^2 <= 1
         valor = ((x - cx)**2) / (rx**2) + ((y - cy)**2) / (ry**2)
-        
+
         if self.cor_preenchimento:
             return valor <= 1.0
         else:
             # Se não tem preenchimento, verifica colisão apenas perto da borda (anel)
             return 0.8 <= valor <= 1.2
 
+    def to_dict(self) -> dict:
+        return {
+            "tipo": "Oval",
+            "x1": self.x1,
+            "y1": self.y1,
+            "x2": self.x2,
+            "y2": self.y2,
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+        }
+
+    @classmethod
+    def from_dict(cls, dados: dict):
+        figura = cls(
+            dados["x1"],
+            dados["y1"],
+            dados.get("cor_borda", "black"),
+            dados.get("cor_preenchimento", ""),
+        )
+        figura.x2 = dados["x2"]
+        figura.y2 = dados["y2"]
+        return figura
 
 class Circulo(Figura):
     def __init__(self, cx: int, cy: int, cor_borda: str = "black", cor_preenchimento: str = ""):
