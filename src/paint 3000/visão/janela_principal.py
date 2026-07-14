@@ -41,7 +41,7 @@ class JanelaPrincipal:
         ttk.OptionMenu(
             frame, self._tipo_figura_var,
             "Linha",
-            "Linha", "Mão livre", "Oval", "Círculo", "Polígono",
+            "Selecionar", "Linha", "Mão livre", "Oval", "Círculo", "Polígono",
         ).grid(column=1, row=0, sticky=tk.W, **pad)
 
         ttk.Label(frame, text="Cor da borda:").grid(column=2, row=0, sticky=tk.W, **pad)
@@ -75,33 +75,6 @@ class JanelaPrincipal:
             relief=tk.RAISED, bd=2,
         )
         self.canvas.grid(column=0, row=3, columnspan=5, sticky=tk.W, **pad)
-
-    # ------------------------------------------------------------------
-    # Conexão com o Controlador
-    # (chamado pelo main.py depois que o Controlador é criado)
-    # ------------------------------------------------------------------
-
-    def configurar_eventos(self, controlador) -> None:
-        """Conecta todos os widgets e eventos ao Controlador."""
-
-        # Botões da barra de ferramentas
-        self._btn_cor_borda.config(command=controlador.escolher_cor_borda)
-        self._btn_cor_preenchimento.config(command=controlador.escolher_cor_preenchimento)
-        self._btn_sem_preenchimento.config(command=controlador.remover_preenchimento)
-        self._btn_limpar.config(command=controlador.limpar_tela)
-
-        # Eventos do canvas
-        self.canvas.bind("<ButtonPress-1>", controlador.iniciar_figura_nova)
-        self.canvas.bind("<B1-Motion>",     controlador.atualizar_figura_nova)
-        self.canvas.bind("<ButtonRelease-1>", controlador.incluir_figura_nova)
-
-        self.canvas.bind("<ButtonPress-3>", controlador.iniciar_redimensionamento_ultima)
-        self.canvas.bind("<ButtonPress-2>", controlador.iniciar_redimensionamento_ultima)
-        self.canvas.bind("<B3-Motion>",     controlador.redimensionar_ultima)
-        self.canvas.bind("<B2-Motion>",     controlador.redimensionar_ultima)
-
-        self.canvas.bind("<Motion>", controlador.mover_preview_poligono)
-        self.root.bind("<Return>",   controlador.finalizar_poligono)
 
     # ------------------------------------------------------------------
     # Interface que o Controlador usa
