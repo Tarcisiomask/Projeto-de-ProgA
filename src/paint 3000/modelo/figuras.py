@@ -60,6 +60,10 @@ class Figura(ABC):
             return Rabisco.from_dict(dados)
         if tipo == "MaoLivre":
             return MaoLivre.from_dict(dados)
+        if tipo == "Circulo":
+            return Circulo.from_dict(dados)
+        if tipo == "Poligono":
+            return Poligono.from_dict(dados)
         raise ValueError(f"Tipo de figura desconhecido: {tipo}")
 
     # -------------------------------------------------------------------------
@@ -72,7 +76,7 @@ class Figura(ABC):
         self.atualizar(x, y)
 
     # -------------------------------------------------------------------------
-    # Manipulação e Seleção (Entrega 5)
+    # Manipulação e Seleção
     # -------------------------------------------------------------------------
     @abstractmethod
     def contem_ponto(self, x: int, y: int) -> bool:
@@ -337,7 +341,6 @@ class Oval(Figura):
         return min(self.x1, self.x2), min(self.y1, self.y2), max(self.x1, self.x2), max(self.y1, self.y2)
 
     def contem_ponto(self, x: int, y: int) -> bool:
-        # Ponto central e raios da elipse
         cx = (self.x1 + self.x2) / 2
         cy = (self.y1 + self.y2) / 2
         rx = abs(self.x1 - self.x2) / 2
@@ -346,13 +349,11 @@ class Oval(Figura):
         if rx == 0 or ry == 0:
             return False
 
-        # Equação da elipse: (x-cx)^2/rx^2 + (y-cy)^2/ry^2 <= 1
         valor = ((x - cx)**2) / (rx**2) + ((y - cy)**2) / (ry**2)
 
         if self.cor_preenchimento:
             return valor <= 1.0
         else:
-            # Se não tem preenchimento, verifica colisão apenas perto da borda (anel)
             return 0.8 <= valor <= 1.2
 
     def to_dict(self) -> dict:
@@ -377,6 +378,7 @@ class Oval(Figura):
         figura.x2 = dados["x2"]
         figura.y2 = dados["y2"]
         return figura
+
 
 class Circulo(Figura):
     def __init__(self, cx: int, cy: int, cor_borda: str = "black", cor_preenchimento: str = ""):
@@ -410,8 +412,28 @@ class Circulo(Figura):
         if self.cor_preenchimento:
             return distancia <= self.raio
         else:
-            # Tolerância para acertar só a borda
             return abs(distancia - self.raio) <= 5.0
+
+    def to_dict(self) -> dict:
+        return {
+            "tipo": "Circulo",
+            "cx": self.cx,
+            "cy": self.cy,
+            "raio": self.raio,
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+        }
+
+    @classmethod
+    def from_dict(cls, dados: dict):
+        figura = cls(
+            dados["cx"],
+            dados["cy"],
+            dados.get("cor_borda", "black"),
+            dados.get("cor_preenchimento", ""),
+        )
+        figura.raio = dados["raio"]
+        return figura
 
 
 class Poligono(Figura):
@@ -473,7 +495,6 @@ class Poligono(Figura):
         return min(xs), min(ys), max(xs), max(ys)
 
     def contem_ponto(self, x: int, y: int) -> bool:
-        # Se tem preenchimento, usa Ray Casting
         if self.cor_preenchimento:
             n = len(self.pontos)
             dentro = False
@@ -489,14 +510,37 @@ class Poligono(Figura):
                                 dentro = not dentro
                 p1x, p1y = p2x, p2y
             return dentro
-            
-        # Se não tem preenchimento, verifica se o clique bateu na linha do perímetro
         else:
             TOLERANCIA = 5.0
             n = len(self.pontos)
             for i in range(n):
                 p1 = self.pontos[i]
-                p2 = self.pontos[(i + 1) % n] # Liga o último ao primeiro
+                p2 = self.pontos[(i + 1) % n]
                 if _dist_ponto_segmento(x, y, p1[0], p1[1], p2[0], p2[1]) <= TOLERANCIA:
                     return True
             return False
+
+    def to_dict(self) -> dict:
+        return {
+            "tipo": "Poligono",
+            "pontos": [[px, py] for px, py in self.pontos],
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+        }
+
+    @classmethod
+    def from_dict(cls, dados: dict):
+        pontos = dados.get("pontos", [])
+        if pontos:
+            figura = cls(
+                pontos[0][0],
+                pontos[0][1],
+                dados.get("cor_borda", "black"),
+                dados.get("cor_preenchimento", ""),
+            )
+            figura.pontos = [(p[0], p[1]) for p in pontos]
+            return figura
+        
+        figura = cls(0, 0, dados.get("cor_borda", "black"), dados.get("cor_preenchimento", ""))
+        figura.pontos = []
+        return figura
