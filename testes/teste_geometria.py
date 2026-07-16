@@ -6,7 +6,7 @@ import unittest
 caminho_projeto = os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/paint 3000'))
 sys.path.insert(0, caminho_projeto)
 
-from modelo.figuras import Circulo, Linha, Poligono
+from modelo.figuras import Circulo, Figura, Grupo, Linha, Poligono
 
 
 class TestGeometriaFiguras(unittest.TestCase):
@@ -81,6 +81,25 @@ class TestGeometriaFiguras(unittest.TestCase):
         self.assertEqual(linha_recuperada.y2, 40)
         self.assertEqual(linha_recuperada.cor_borda, "red")
         self.assertEqual(linha_recuperada.cor_preenchimento, "blue")
+
+    def test_grupo_serializa_e_reconstrui_filhos(self):
+        """Teste para o padrão Composite: um grupo deve serializar e reconstruir suas subfiguras."""
+        linha = Linha(10, 20, "red", "")
+        linha.atualizar(30, 40)
+        circulo = Circulo(100, 100, "black", "blue")
+        circulo.raio = 20
+
+        grupo = Grupo([linha, circulo])
+        dados = grupo.to_dict()
+
+        self.assertEqual(dados["tipo"], "Grupo")
+        self.assertEqual(len(dados["figuras"]), 2)
+
+        grupo_recuperado = Figura.from_dict(dados)
+        self.assertIsInstance(grupo_recuperado, Grupo)
+        self.assertEqual(len(grupo_recuperado.figuras), 2)
+        self.assertIsInstance(grupo_recuperado.figuras[0], Linha)
+        self.assertIsInstance(grupo_recuperado.figuras[1], Circulo)
 
 if __name__ == "__main__":
     unittest.main()
