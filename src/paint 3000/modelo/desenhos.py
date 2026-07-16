@@ -84,11 +84,17 @@ class Desenho:
         """Retorna a lista de figuras selecionadas."""
         return self.selecionadas
 
+    def remover_figura(self, figura: Figura) -> None:
+        """Remove uma figura do desenho e da seleção, se ela estiver presente."""
+        if figura in self._figuras:
+            self._figuras.remove(figura)
+        if figura in self.selecionadas:
+            self.selecionadas.remove(figura)
+
     def remover_selecionada(self) -> None:
         """Remove todas as figuras selecionadas do canvas e limpa a seleção."""
-        for fig in self.selecionadas:
-            if fig in self._figuras:
-                self._figuras.remove(fig)
+        for fig in list(self.selecionadas):
+            self.remover_figura(fig)
         self.selecionadas.clear()
 
     def figura_em(self, x: int, y: int) -> Figura | None:
