@@ -10,8 +10,7 @@ from controlador.estados import (
 )
 from controlador.estados.estado_selecao import EstadoSelecao
 
-# IMPORTAÇÕES DA ENTREGA 4 (Salvar/Abrir)
-from controlador.imagem import Image
+from imagem import Image
 from modelo.figuras import Figura
 
 _ESTADOS: dict[str, type[ToolState]] = {
@@ -30,8 +29,6 @@ class Controlador:
         self.modelo = modelo
         self.visao  = visao
         self.estado_atual: ToolState = EstadoLinha(self)
-        
-        # Gerenciador de salvar/abrir
         self.gerenciador_imagem = Image(self.visao)
 
     def configurar_eventos(self) -> None:
@@ -45,7 +42,6 @@ class Controlador:
         self.visao._btn_sem_preenchimento.config(command=self.remover_preenchimento)
         self.visao._btn_limpar.config(command=self.limpar_tela)
         
-        # Binds de Salvar e Abrir (Entrega 4)
         self.visao._btn_salvar.config(command=self.salvar_projeto)
         self.visao._btn_abrir.config(command=self.abrir_projeto)
 
@@ -60,7 +56,6 @@ class Controlador:
 
         self.visao.canvas.bind("<Motion>", self.mover_preview_poligono)
         
-        # Teclado
         self.visao.root.bind("<Return>", self.finalizar_poligono)
         self.visao.root.bind("<Delete>", self.apagar_selecionada)
         self.visao.root.bind("<BackSpace>", self.apagar_selecionada)
@@ -81,9 +76,9 @@ class Controlador:
         for fig in self.modelo:
             fig.desenhar(self.visao.canvas)
             
-        selecionada = self.modelo.selecionada()
-        if selecionada:
-            selecionada.desenhar_selecionado(self.visao.canvas)
+        # Agora iteramos sobre a lista de figuras selecionadas
+        for fig_selecionada in self.modelo.selecionada():
+            fig_selecionada.desenhar_selecionado(self.visao.canvas)
 
 
     def apagar_selecionada(self, event=None) -> None:
@@ -141,19 +136,12 @@ class Controlador:
         self.modelo.limpar()
         self.redesenhar()
 
-    # ------------------------------------------------------------------
-    # Métodos de Salvar/Abrir (Entrega 4)
-    # ------------------------------------------------------------------
     def salvar_projeto(self) -> None:
-        # Pega as figuras do modelo e manda salvar
         self.gerenciador_imagem.figuras = list(self.modelo)
         self.gerenciador_imagem.salvar_projeto_json()
 
     def abrir_projeto(self) -> None:
-        # Usa Figura.from_dict como Factory para recriar as figuras do JSON
         self.gerenciador_imagem.abrir_projeto_json(Figura.from_dict)
-        
-        # Sincroniza o modelo com os dados carregados
         if self.gerenciador_imagem.figuras:
             self.modelo.limpar()
             for fig in self.gerenciador_imagem.figuras:
