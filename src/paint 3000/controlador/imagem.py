@@ -1,6 +1,5 @@
 import json
 from tkinter import filedialog, messagebox
-from controlador import Controlador
 
 class Image:
     def __init__(self, app_ui):
@@ -26,11 +25,10 @@ class Image:
 
             messagebox.showinfo("Salvar", "Projeto Salvo")
         except Exception as e:
-            messagebox.showinfo("Erro", f"Não salvo {str(e)}")
+            messagebox.showerror("Erro", f"Não salvo: {str(e)}")
     
     def abrir_projeto_json(self, factory_figuras):
-        #adequar aos metodos/classes de gustavo
-        caminho_arquivo = filedialog.askopenfilename(filetypes=[("arquivos JSON", "*.json"), ("Todos os arquivos", "*.*")])
+        caminho_arquivo = filedialog.askopenfilename(filetypes=[("Arquivos JSON", "*.json"), ("Todos os arquivos", "*.*")])
         if not caminho_arquivo:
             return #usuario cancelou
         try:
@@ -38,20 +36,17 @@ class Image:
                 dados_do_projeto = json.load(f)
             
             if dados_do_projeto.get("formato") != "MeuPaintVetorial":
-                raise ValueError("Não compativel")
+                raise ValueError("Formato de arquivo incompatível")
             
             self.figuras.clear()
-            self.app_ui.limpar_tela()
             cor_fundo = dados_do_projeto.get("canvas_gb", "white")
             self.app_ui.canvas.config(bg=cor_fundo)
+            
             for figura_dict in dados_do_projeto.get("figuras", []):
                 nova_figura = factory_figuras(figura_dict)
                 self.figuras.append(nova_figura)
-            self.app_ui.desenhar_todas_figuras(self.figuras)
-            messagebox.showinfo("Abrir", "Carregado com sucesso")
+                
+            messagebox.showinfo("Abrir", "Projeto carregado com sucesso")
 
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao carregar {str(e)}")
-
-
-
+            messagebox.showerror("Erro", f"Erro ao carregar: {str(e)}")

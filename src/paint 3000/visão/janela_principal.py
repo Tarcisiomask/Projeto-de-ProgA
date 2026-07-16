@@ -59,15 +59,22 @@ class JanelaPrincipal:
         self._btn_sem_preenchimento = ttk.Button(frame, text="Sem preenchimento")
         self._btn_sem_preenchimento.grid(column=3, row=1, columnspan=2, sticky=tk.W, **pad)
 
-        # — Linha 2: botão limpar + dica —
+        # — Linha 2: botão limpar + botões salvar/abrir + dica —
         self._btn_limpar = ttk.Button(frame, text="Limpar")
         self._btn_limpar.grid(column=0, row=2, sticky=tk.W, **pad)
+        
+        self._btn_salvar = ttk.Button(frame, text="Salvar")
+        self._btn_salvar.grid(column=1, row=2, sticky=tk.W, **pad)
+        
+        self._btn_abrir = ttk.Button(frame, text="Abrir")
+        self._btn_abrir.grid(column=2, row=2, sticky=tk.W, **pad)
+        
         ttk.Label(
             frame,
             text="Polígono livre: clique = vértice | Enter = fechar\n"
                  "Botão direito + arrasto = redimensionar última figura",
             foreground="gray",
-        ).grid(column=1, row=2, columnspan=4, sticky=tk.W, **pad)
+        ).grid(column=3, row=2, columnspan=2, sticky=tk.W, **pad)
 
         # — Linha 3: canvas de desenho —
         self.canvas = tk.Canvas(

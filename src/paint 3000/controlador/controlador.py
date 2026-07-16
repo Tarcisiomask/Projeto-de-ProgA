@@ -8,10 +8,12 @@ from controlador.estados import (
     EstadoCirculo,
     EstadoPoligono,
 )
-# IMPORT NOVO
 from controlador.estados.estado_selecao import EstadoSelecao
 
-# Adicionamos "Selecionar" no dicionário de estados
+# IMPORTAÇÕES DA ENTREGA 4 (Salvar/Abrir)
+from controlador.imagem import Image
+from modelo.figuras import Figura
+
 _ESTADOS: dict[str, type[ToolState]] = {
     "Selecionar": EstadoSelecao,
     "Linha":     EstadoLinha,
@@ -28,6 +30,9 @@ class Controlador:
         self.modelo = modelo
         self.visao  = visao
         self.estado_atual: ToolState = EstadoLinha(self)
+        
+        # Gerenciador de salvar/abrir
+        self.gerenciador_imagem = Image(self.visao)
 
     def configurar_eventos(self) -> None:
         self.visao._tipo_figura_var.trace_add(
@@ -39,6 +44,10 @@ class Controlador:
         self.visao._btn_cor_preenchimento.config(command=self.escolher_cor_preenchimento)
         self.visao._btn_sem_preenchimento.config(command=self.remover_preenchimento)
         self.visao._btn_limpar.config(command=self.limpar_tela)
+        
+        # Binds de Salvar e Abrir (Entrega 4)
+        self.visao._btn_salvar.config(command=self.salvar_projeto)
+        self.visao._btn_abrir.config(command=self.abrir_projeto)
 
         self.visao.canvas.bind("<ButtonPress-1>", self.iniciar_figura_nova)
         self.visao.canvas.bind("<B1-Motion>",     self.atualizar_figura_nova)
@@ -53,7 +62,6 @@ class Controlador:
         
         # Teclado
         self.visao.root.bind("<Return>", self.finalizar_poligono)
-        # ATALHOS NOVOS: Apagar figura selecionada
         self.visao.root.bind("<Delete>", self.apagar_selecionada)
         self.visao.root.bind("<BackSpace>", self.apagar_selecionada)
 
@@ -62,7 +70,6 @@ class Controlador:
         classe = _ESTADOS.get(nome)
         if classe and not isinstance(self.estado_atual, classe):
             self.modelo.figura_nova = None
-            # Limpa a seleção ao trocar de ferramenta (evita bugs de apagar algo enquanto desenha)
             self.modelo.selecionar(None) 
             self.redesenhar()
             self.estado_atual = classe(self)
@@ -71,23 +78,17 @@ class Controlador:
     def redesenhar(self) -> None:
         self.visao.limpar_canvas()
         
-        # Desenha todas as figuras normais primeiro
         for fig in self.modelo:
             fig.desenhar(self.visao.canvas)
             
-        # Desenha o highlight (caixa tracejada azul) POR ÚLTIMO para ficar por cima de tudo
         selecionada = self.modelo.selecionada()
         if selecionada:
             selecionada.desenhar_selecionado(self.visao.canvas)
 
 
-    # NOVO MÉTODO: Apagar figura
     def apagar_selecionada(self, event=None) -> None:
         self.modelo.remover_selecionada()
         self.redesenhar()
-
-
-    # ... (Os métodos de clique de mouse, redimensionamento e cores continuam iguais ao que já tínhamos) ...
 
     def iniciar_figura_nova(self, event) -> None:
         self.estado_atual.iniciar(event)
@@ -139,3 +140,22 @@ class Controlador:
     def limpar_tela(self) -> None:
         self.modelo.limpar()
         self.redesenhar()
+
+    # ------------------------------------------------------------------
+    # Métodos de Salvar/Abrir (Entrega 4)
+    # ------------------------------------------------------------------
+    def salvar_projeto(self) -> None:
+        # Pega as figuras do modelo e manda salvar
+        self.gerenciador_imagem.figuras = list(self.modelo)
+        self.gerenciador_imagem.salvar_projeto_json()
+
+    def abrir_projeto(self) -> None:
+        # Usa Figura.from_dict como Factory para recriar as figuras do JSON
+        self.gerenciador_imagem.abrir_projeto_json(Figura.from_dict)
+        
+        # Sincroniza o modelo com os dados carregados
+        if self.gerenciador_imagem.figuras:
+            self.modelo.limpar()
+            for fig in self.gerenciador_imagem.figuras:
+                self.modelo.adicionar(fig)
+            self.redesenhar()
