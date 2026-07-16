@@ -44,6 +44,11 @@ class Controlador:
         
         self.visao._btn_salvar.config(command=self.salvar_projeto)
         self.visao._btn_abrir.config(command=self.abrir_projeto)
+        
+        self.visao._btn_subir_camada.config(command=self.camada_frente)
+        self.visao._btn_descer_camada.config(command=self.camada_tras)
+        self.visao.root.bind("<Up>", self.camada_frente)
+        self.visao.root.bind("<Down>", self.camada_tras)
 
         self.visao.canvas.bind("<ButtonPress-1>", self.iniciar_figura_nova)
         self.visao.canvas.bind("<B1-Motion>",     self.atualizar_figura_nova)
@@ -120,6 +125,7 @@ class Controlador:
         )[1]
         if cor:
             self.visao.definir_cor_borda(cor)
+            self._aplicar_cor_selecionadas("borda", cor)
 
     def escolher_cor_preenchimento(self) -> None:
         cor = colorchooser.askcolor(
@@ -128,9 +134,22 @@ class Controlador:
         )[1]
         if cor:
             self.visao.definir_cor_preenchimento(cor)
+            self._aplicar_cor_selecionadas("preenchimento", cor)
 
     def remover_preenchimento(self) -> None:
         self.visao.definir_cor_preenchimento("")
+        self._aplicar_cor_selecionadas("preenchimento", "")
+
+    def _aplicar_cor_selecionadas(self, tipo: str, cor: str) -> None:
+        """Função nova: Se houver algo selecionado, aplica a cor imediatamente."""
+        selecionadas = self.modelo.selecionada()
+        if selecionadas:
+            for fig in selecionadas:
+                if tipo == "borda":
+                    fig.cor_borda = cor
+                elif tipo == "preenchimento":
+                    fig.cor_preenchimento = cor
+            self.redesenhar()
 
     def limpar_tela(self) -> None:
         self.modelo.limpar()
@@ -147,3 +166,11 @@ class Controlador:
             for fig in self.gerenciador_imagem.figuras:
                 self.modelo.adicionar(fig)
             self.redesenhar()
+            
+    def camada_frente(self, event=None) -> None:
+        self.modelo.avancar_camada()
+        self.redesenhar()
+
+    def camada_tras(self, event=None) -> None:
+        self.modelo.recuar_camada()
+        self.redesenhar()
