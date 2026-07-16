@@ -9,7 +9,7 @@ from controlador.estados import (
     EstadoPoligono,
 )
 from controlador.estados.estado_selecao import EstadoSelecao
-
+from modelo.desenhos import Desenho
 from controlador.imagem import Image
 from modelo.figuras import Figura
 
@@ -50,6 +50,10 @@ class Controlador:
         self.visao.root.bind("<Up>", self.camada_frente)
         self.visao.root.bind("<Down>", self.camada_tras)
 
+        self.visao.root.bind("<Control-c>", self.copiar_figuras)
+        self.visao.root.bind("<Control-v>", self.colar_figuras)
+        self.visao.root.bind("<Control-x>", self.recortar_figuras)
+
         self.visao.canvas.bind("<ButtonPress-1>", self.iniciar_figura_nova)
         self.visao.canvas.bind("<B1-Motion>",     self.atualizar_figura_nova)
         self.visao.canvas.bind("<ButtonRelease-1>", self.incluir_figura_nova)
@@ -64,6 +68,8 @@ class Controlador:
         self.visao.root.bind("<Return>", self.finalizar_poligono)
         self.visao.root.bind("<Delete>", self.apagar_selecionada)
         self.visao.root.bind("<BackSpace>", self.apagar_selecionada)
+
+        self.visao.root.focus_set()
 
 
     def trocar_ferramenta(self, nome: str) -> None:
@@ -174,3 +180,20 @@ class Controlador:
     def camada_tras(self, event=None) -> None:
         self.modelo.recuar_camada()
         self.redesenhar()
+    
+    def copiar_figuras(self, event=None) -> None:
+       self.modelo.copiar()
+
+    def recortar_figuras(self, event=None) -> None:
+        self.modelo.recortar()
+        self.redesenhar() 
+
+    
+    def colar_figuras(self, event=None) -> None:
+        """Pede ao modelo para colar as figuras e manda a visão desenhar os novos clones."""
+        # O modelo cola e nos devolve a lista das novas instâncias que foram criadas
+        novas = self.modelo.colar()
+        
+        if novas:
+            self.redesenhar()
+
