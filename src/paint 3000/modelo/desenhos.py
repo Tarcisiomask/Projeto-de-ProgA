@@ -61,3 +61,23 @@ class Desenho:
             if fig.contem_ponto(x, y):
                 return fig
         return None
+    
+    # ------------------------------------------------------------------
+    # Movimentação em Camadas (Entrega 5)
+    # ------------------------------------------------------------------
+    
+    def avancar_camada(self) -> None:
+        """Move as figuras selecionadas um passo para a frente."""
+        indices = [i for i, f in enumerate(self._figuras) if f in self.selecionadas]
+        
+        for i in reversed(indices):
+            if i < len(self._figuras) - 1:
+                self._figuras[i], self._figuras[i + 1] = self._figuras[i + 1], self._figuras[i]
+
+    def recuar_camada(self) -> None:
+        """Move as figuras selecionadas um passo para trás."""
+        indices = [i for i, f in enumerate(self._figuras) if f in self.selecionadas]
+        
+        for i in indices:
+            if i > 0:
+                self._figuras[i], self._figuras[i - 1] = self._figuras[i - 1], self._figuras[i]
