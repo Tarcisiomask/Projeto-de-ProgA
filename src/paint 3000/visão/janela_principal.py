@@ -63,17 +63,23 @@ class JanelaPrincipal:
         self._btn_limpar = ttk.Button(frame, text="Limpar")
         self._btn_limpar.grid(column=0, row=2, sticky=tk.W, **pad)
         
-        self._btn_salvar = ttk.Button(frame, text="Salvar")
-        self._btn_salvar.grid(column=1, row=2, sticky=tk.W, **pad)
+        # Mini-container para colar o Salvar e o Abrir na Coluna 1
+        frame_arquivos = tk.Frame(frame)
+        frame_arquivos.grid(column=1, row=2, sticky=tk.W, pady=5)
         
-        self._btn_abrir = ttk.Button(frame, text="Abrir")
-        self._btn_abrir.grid(column=2, row=2, sticky=tk.W, **pad)
+        self._btn_salvar = ttk.Button(frame_arquivos, text="💾", width=3)
+        self._btn_salvar.grid(column=0, row=0, padx=(5, 0))
+        
+        self._btn_abrir = ttk.Button(frame_arquivos, text="📂", width=3)
+        self._btn_abrir.grid(column=1, row=0, padx=(0, 5))
         
         self._btn_subir_camada = ttk.Button(frame, text="▲", width=3)
         self._btn_subir_camada.grid(column=3, row=2, sticky=tk.W, **pad)
 
         self._btn_descer_camada = ttk.Button(frame, text="▼", width=3)
         self._btn_descer_camada.grid(column=4, row=2, sticky=tk.W, **pad)
+
+
 
         # — Linha 3: canvas de desenho —
         self.canvas = tk.Canvas(
