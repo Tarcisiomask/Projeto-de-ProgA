@@ -8,10 +8,11 @@ from controlador.estados import (
     EstadoCirculo,
     EstadoPoligono,
 )
-# IMPORT NOVO
 from controlador.estados.estado_selecao import EstadoSelecao
 
-# Adicionamos "Selecionar" no dicionário de estados
+from controlador.imagem import Image
+from modelo.figuras import Figura
+
 _ESTADOS: dict[str, type[ToolState]] = {
     "Selecionar": EstadoSelecao,
     "Linha":     EstadoLinha,
@@ -28,6 +29,7 @@ class Controlador:
         self.modelo = modelo
         self.visao  = visao
         self.estado_atual: ToolState = EstadoLinha(self)
+        self.gerenciador_imagem = Image(self.visao)
 
     def configurar_eventos(self) -> None:
         self.visao._tipo_figura_var.trace_add(
@@ -39,6 +41,14 @@ class Controlador:
         self.visao._btn_cor_preenchimento.config(command=self.escolher_cor_preenchimento)
         self.visao._btn_sem_preenchimento.config(command=self.remover_preenchimento)
         self.visao._btn_limpar.config(command=self.limpar_tela)
+        
+        self.visao._btn_salvar.config(command=self.salvar_projeto)
+        self.visao._btn_abrir.config(command=self.abrir_projeto)
+        
+        self.visao._btn_subir_camada.config(command=self.camada_frente)
+        self.visao._btn_descer_camada.config(command=self.camada_tras)
+        self.visao.root.bind("<Up>", self.camada_frente)
+        self.visao.root.bind("<Down>", self.camada_tras)
 
         self.visao.canvas.bind("<ButtonPress-1>", self.iniciar_figura_nova)
         self.visao.canvas.bind("<B1-Motion>",     self.atualizar_figura_nova)
@@ -51,9 +61,7 @@ class Controlador:
 
         self.visao.canvas.bind("<Motion>", self.mover_preview_poligono)
         
-        # Teclado
         self.visao.root.bind("<Return>", self.finalizar_poligono)
-        # ATALHOS NOVOS: Apagar figura selecionada
         self.visao.root.bind("<Delete>", self.apagar_selecionada)
         self.visao.root.bind("<BackSpace>", self.apagar_selecionada)
 
@@ -62,7 +70,6 @@ class Controlador:
         classe = _ESTADOS.get(nome)
         if classe and not isinstance(self.estado_atual, classe):
             self.modelo.figura_nova = None
-            # Limpa a seleção ao trocar de ferramenta (evita bugs de apagar algo enquanto desenha)
             self.modelo.selecionar(None) 
             self.redesenhar()
             self.estado_atual = classe(self)
@@ -71,23 +78,17 @@ class Controlador:
     def redesenhar(self) -> None:
         self.visao.limpar_canvas()
         
-        # Desenha todas as figuras normais primeiro
         for fig in self.modelo:
             fig.desenhar(self.visao.canvas)
             
-        # Desenha o highlight (caixa tracejada azul) POR ÚLTIMO para ficar por cima de tudo
-        selecionada = self.modelo.selecionada()
-        if selecionada:
-            selecionada.desenhar_selecionado(self.visao.canvas)
+        # Agora iteramos sobre a lista de figuras selecionadas
+        for fig_selecionada in self.modelo.selecionada():
+            fig_selecionada.desenhar_selecionado(self.visao.canvas)
 
 
-    # NOVO MÉTODO: Apagar figura
     def apagar_selecionada(self, event=None) -> None:
         self.modelo.remover_selecionada()
         self.redesenhar()
-
-
-    # ... (Os métodos de clique de mouse, redimensionamento e cores continuam iguais ao que já tínhamos) ...
 
     def iniciar_figura_nova(self, event) -> None:
         self.estado_atual.iniciar(event)
@@ -124,6 +125,7 @@ class Controlador:
         )[1]
         if cor:
             self.visao.definir_cor_borda(cor)
+            self._aplicar_cor_selecionadas("borda", cor)
 
     def escolher_cor_preenchimento(self) -> None:
         cor = colorchooser.askcolor(
@@ -132,10 +134,43 @@ class Controlador:
         )[1]
         if cor:
             self.visao.definir_cor_preenchimento(cor)
+            self._aplicar_cor_selecionadas("preenchimento", cor)
 
     def remover_preenchimento(self) -> None:
         self.visao.definir_cor_preenchimento("")
+        self._aplicar_cor_selecionadas("preenchimento", "")
+
+    def _aplicar_cor_selecionadas(self, tipo: str, cor: str) -> None:
+        """Função nova: Se houver algo selecionado, aplica a cor imediatamente."""
+        selecionadas = self.modelo.selecionada()
+        if selecionadas:
+            for fig in selecionadas:
+                if tipo == "borda":
+                    fig.cor_borda = cor
+                elif tipo == "preenchimento":
+                    fig.cor_preenchimento = cor
+            self.redesenhar()
 
     def limpar_tela(self) -> None:
         self.modelo.limpar()
+        self.redesenhar()
+
+    def salvar_projeto(self) -> None:
+        self.gerenciador_imagem.figuras = list(self.modelo)
+        self.gerenciador_imagem.salvar_projeto_json()
+
+    def abrir_projeto(self) -> None:
+        self.gerenciador_imagem.abrir_projeto_json(Figura.from_dict)
+        if self.gerenciador_imagem.figuras:
+            self.modelo.limpar()
+            for fig in self.gerenciador_imagem.figuras:
+                self.modelo.adicionar(fig)
+            self.redesenhar()
+            
+    def camada_frente(self, event=None) -> None:
+        self.modelo.avancar_camada()
+        self.redesenhar()
+
+    def camada_tras(self, event=None) -> None:
+        self.modelo.recuar_camada()
         self.redesenhar()

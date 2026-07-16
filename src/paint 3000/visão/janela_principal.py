@@ -18,7 +18,7 @@ class JanelaPrincipal:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Ferramenta de Desenho")
-        self.root.geometry("750x750")
+        self.root.geometry("800x800")
 
         self.cor_borda_atual        = "black"
         self.cor_preenchimento_atual = ""
@@ -59,23 +59,38 @@ class JanelaPrincipal:
         self._btn_sem_preenchimento = ttk.Button(frame, text="Sem preenchimento")
         self._btn_sem_preenchimento.grid(column=3, row=1, columnspan=2, sticky=tk.W, **pad)
 
-        # — Linha 2: botão limpar + dica —
+        # — Linha 2: botão limpar + botões salvar/abrir + Up/Down —
         self._btn_limpar = ttk.Button(frame, text="Limpar")
         self._btn_limpar.grid(column=0, row=2, sticky=tk.W, **pad)
-        ttk.Label(
-            frame,
-            text="Polígono livre: clique = vértice | Enter = fechar\n"
-                 "Botão direito + arrasto = redimensionar última figura",
-            foreground="gray",
-        ).grid(column=1, row=2, columnspan=4, sticky=tk.W, **pad)
+        
+        self._btn_salvar = ttk.Button(frame, text="Salvar")
+        self._btn_salvar.grid(column=1, row=2, sticky=tk.W, **pad)
+        
+        self._btn_abrir = ttk.Button(frame, text="Abrir")
+        self._btn_abrir.grid(column=2, row=2, sticky=tk.W, **pad)
+        
+        self._btn_subir_camada = ttk.Button(frame, text="▲", width=3)
+        self._btn_subir_camada.grid(column=3, row=2, sticky=tk.W, **pad)
+
+        self._btn_descer_camada = ttk.Button(frame, text="▼", width=3)
+        self._btn_descer_camada.grid(column=4, row=2, sticky=tk.W, **pad)
 
         # — Linha 3: canvas de desenho —
         self.canvas = tk.Canvas(
             frame, bg="white", width=600, height=600,
             relief=tk.RAISED, bd=2,
         )
-        self.canvas.grid(column=0, row=3, columnspan=5, sticky=tk.W, **pad)
+        self.canvas.grid(column=0, row=3, columnspan=6, sticky=tk.W, **pad)
 
+        # — Linha 4: Dicas —
+        
+        ttk.Label(
+            frame,
+            text="Polígono livre: Clique = Vértice, Enter = fechar | Botão direito + Arrasto = Redimensionar última figura\n"
+                 "Seleção Múltipla: SHIFT | Mudar camada da figura: Setas UP e DOWN | Apagar figura seleciona: BACKSPACE\n",
+            foreground="gray",
+        ).grid(column=0, row=4, columnspan=6, sticky=tk.W, **pad)
+        
     # ------------------------------------------------------------------
     # Interface que o Controlador usa
     # ------------------------------------------------------------------

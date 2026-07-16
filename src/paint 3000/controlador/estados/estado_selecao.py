@@ -3,6 +3,7 @@ from controlador.estados.estado import ToolState
 class EstadoSelecao(ToolState):
     """
     Ferramenta de seleção e movimentação de figuras.
+    Suporta seleção múltipla utilizando a tecla Shift.
     """
 
     def __init__(self, controlador):
@@ -11,11 +12,20 @@ class EstadoSelecao(ToolState):
         self._ultimo_y = 0
 
     def iniciar(self, event) -> None:
+        # Detecta se a tecla Shift está pressionada (estado 0x0001 no Tkinter)
+        shift_pressionado = (event.state & 0x0001) != 0
+        
         # Pede para o modelo procurar uma figura na coordenada clicada
         fig_clicada = self.controlador.modelo.figura_em(event.x, event.y)
         
-        # Atualiza a seleção (se clicou no vazio, fig_clicada é None, o que limpa a seleção)
-        self.controlador.modelo.selecionar(fig_clicada)
+        selecionadas = self.controlador.modelo.selecionada()
+        
+        # Se clicou em uma figura já selecionada SEM o shift, 
+        # não limpamos a seleção, pois o usuário pode querer arrastar o bloco todo.
+        if fig_clicada and fig_clicada in selecionadas and not shift_pressionado:
+            pass
+        else:
+            self.controlador.modelo.selecionar(fig_clicada, adicionar=shift_pressionado)
         
         # Salva o ponto inicial do clique para calcular o delta (dx, dy) no arraste
         self._ultimo_x = event.x
@@ -25,26 +35,25 @@ class EstadoSelecao(ToolState):
         self.controlador.redesenhar()
 
     def atualizar(self, event) -> None:
-        # Pega a figura que está selecionada no momento
-        fig = self.controlador.modelo.selecionada()
+        # Pega a lista de figuras selecionadas
+        selecionadas = self.controlador.modelo.selecionada()
         
-        # Se houver uma figura selecionada, fazemos a movimentação
-        if fig is not None:
-            # Calcula o deslocamento (delta) em pixels desde o último milissegundo
+        # Se houver figuras selecionadas, fazemos a movimentação
+        if selecionadas:
+            # Calcula o deslocamento (delta) em pixels
             dx = event.x - self._ultimo_x
             dy = event.y - self._ultimo_y
             
-            # Move a figura geometricamente
-            fig.mover(dx, dy)
+            # Move TODAS as figuras selecionadas
+            for fig in selecionadas:
+                fig.mover(dx, dy)
             
             # Atualiza o "último ponto" para o próximo passo do mouse
             self._ultimo_x = event.x
             self._ultimo_y = event.y
             
-            # Atualiza a tela para o usuário ver a figura se movendo
             self.controlador.redesenhar()
 
     def finalizar(self, event) -> None:
-        # Quando o usuário solta o botão do mouse, não fazemos nada.
-        # A figura permanece selecionada para caso ele queira apertar <Delete>.
+        # Quando o usuário solta o botão do mouse, a figura permanece selecionada.
         pass
