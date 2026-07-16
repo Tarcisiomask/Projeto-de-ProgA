@@ -64,6 +64,8 @@ class Figura(ABC):
             return Circulo.from_dict(dados)
         if tipo == "Poligono":
             return Poligono.from_dict(dados)
+        if tipo == "Grupo":
+            return Grupo.from_dict(dados)
         raise ValueError(f"Tipo de figura desconhecido: {tipo}")
 
     # -------------------------------------------------------------------------
@@ -105,6 +107,59 @@ class Figura(ABC):
 # -----------------------------------------------------------------------------
 # Figuras
 # -----------------------------------------------------------------------------
+
+class Grupo(Figura):
+    """Composite: um grupo agrupa várias figuras e repassa comandos para elas."""
+
+    def __init__(self, figuras: list["Figura"]):
+        super().__init__("", "")
+        self.figuras = list(figuras)
+
+    def desenhar(self, canvas: tk.Canvas) -> None:
+        for fig in self.figuras:
+            fig.desenhar(canvas)
+
+    def desenhar_preview(self, canvas: tk.Canvas) -> None:
+        for fig in self.figuras:
+            fig.desenhar_preview(canvas)
+
+    def atualizar(self, x: int, y: int) -> None:
+        pass
+
+    def incompleta(self) -> bool:
+        return not self.figuras or any(fig.incompleta() for fig in self.figuras)
+
+    def to_dict(self) -> dict:
+        return {
+            "tipo": "Grupo",
+            "figuras": [fig.to_dict() for fig in self.figuras],
+        }
+
+    @classmethod
+    def from_dict(cls, dados: dict) -> "Grupo":
+        figuras_reconstruidas = [Figura.from_dict(fig_dados) for fig_dados in dados.get("figuras", [])]
+        return cls(figuras_reconstruidas)
+
+    def contem_ponto(self, x: int, y: int) -> bool:
+        return any(fig.contem_ponto(x, y) for fig in self.figuras)
+
+    def mover(self, dx: int, dy: int) -> None:
+        for fig in self.figuras:
+            fig.mover(dx, dy)
+
+    def bbox(self) -> tuple[int, int, int, int]:
+        if not self.figuras:
+            return 0, 0, 0, 0
+
+        min_x, min_y, max_x, max_y = self.figuras[0].bbox()
+        for fig in self.figuras[1:]:
+            x1, y1, x2, y2 = fig.bbox()
+            min_x = min(min_x, x1)
+            min_y = min(min_y, y1)
+            max_x = max(max_x, x2)
+            max_y = max(max_y, y2)
+        return min_x, min_y, max_x, max_y
+
 
 class Linha(Figura):
     def __init__(self, x1: int, y1: int, cor_borda: str = "black", cor_preenchimento: str = ""):
