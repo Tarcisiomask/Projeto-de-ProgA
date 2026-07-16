@@ -79,23 +79,27 @@ class JanelaPrincipal:
         self._btn_descer_camada = ttk.Button(frame, text="▼", width=3)
         self._btn_descer_camada.grid(column=4, row=2, sticky=tk.W, **pad)
 
+        self._btn_agrupar = ttk.Button(frame, text="Agrupar")
+        self._btn_agrupar.grid(column=5, row=2, sticky=tk.W, **pad)
 
+        self._btn_desagrupar = ttk.Button(frame, text="Desagrupar")
+        self._btn_desagrupar.grid(column=6, row=2, sticky=tk.W, **pad)
 
         # — Linha 3: canvas de desenho —
         self.canvas = tk.Canvas(
             frame, bg="white", width=600, height=600,
             relief=tk.RAISED, bd=2,
         )
-        self.canvas.grid(column=0, row=3, columnspan=6, sticky=tk.W, **pad)
+        self.canvas.grid(column=0, row=3, columnspan=7, sticky=tk.W, **pad)
 
         # — Linha 4: Dicas —
         
         ttk.Label(
             frame,
             text="Polígono livre: Clique = Vértice, Enter = fechar | Botão direito + Arrasto = Redimensionar última figura\n"
-                 "Seleção Múltipla: SHIFT | Mudar camada da figura: Setas UP e DOWN | Apagar figura seleciona: BACKSPACE\n",
+                 "Seleção Múltipla: SHIFT | Mudar camada da figura: Setas UP e DOWN | Agrupar/Desagrupar: Ctrl+G / Ctrl+U\n",
             foreground="gray",
-        ).grid(column=0, row=4, columnspan=6, sticky=tk.W, **pad)
+        ).grid(column=0, row=4, columnspan=7, sticky=tk.W, **pad)
         
     # ------------------------------------------------------------------
     # Interface que o Controlador usa
