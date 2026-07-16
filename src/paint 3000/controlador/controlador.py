@@ -10,7 +10,7 @@ from controlador.estados import (
 )
 from controlador.estados.estado_selecao import EstadoSelecao
 
-from imagem import Image
+from controlador.imagem import Image
 from modelo.figuras import Figura
 
 _ESTADOS: dict[str, type[ToolState]] = {
