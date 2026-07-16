@@ -43,10 +43,10 @@ Registro de quem fez o quê em cada entrega.
 | Integrante | Tarefa | Commit(s) |
 |---|---|---|
 | Gustavo Alexandre Barros Souza |  |  |
-| Pedro Lucas de Jesus Vasconcelos |  |  |
+| Pedro Lucas de Jesus Vasconcelos | Mudança de cor e movimentação em camadas | 7c63035 |
 | Tarcísio Almeida Mascarenhas | implementação da seleção única e múltipla | d0511b6 |
 
-## Entrega 5 — `OO.Compostas.1` (16/07/06)
+## Entrega 6 — `OO.Compostas.1` (16/07/06)
 
 
 
