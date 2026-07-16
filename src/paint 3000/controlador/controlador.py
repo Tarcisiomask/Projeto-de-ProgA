@@ -11,7 +11,7 @@ from controlador.estados import (
 from controlador.estados.estado_selecao import EstadoSelecao
 from modelo.desenhos import Desenho
 from controlador.imagem import Image
-from modelo.figuras import Figura
+from modelo.figuras import Figura, Grupo
 
 _ESTADOS: dict[str, type[ToolState]] = {
     "Selecionar": EstadoSelecao,
@@ -47,12 +47,16 @@ class Controlador:
         
         self.visao._btn_subir_camada.config(command=self.camada_frente)
         self.visao._btn_descer_camada.config(command=self.camada_tras)
+        self.visao._btn_agrupar.config(command=self.agrupar_selecionadas)
+        self.visao._btn_desagrupar.config(command=self.desagrupar_selecionadas)
         self.visao.root.bind("<Up>", self.camada_frente)
         self.visao.root.bind("<Down>", self.camada_tras)
 
         self.visao.root.bind("<Control-c>", self.copiar_figuras)
         self.visao.root.bind("<Control-v>", self.colar_figuras)
         self.visao.root.bind("<Control-x>", self.recortar_figuras)
+        self.visao.root.bind("<Control-g>", self.agrupar_selecionadas)
+        self.visao.root.bind("<Control-u>", self.desagrupar_selecionadas)
 
         self.visao.canvas.bind("<ButtonPress-1>", self.iniciar_figura_nova)
         self.visao.canvas.bind("<B1-Motion>",     self.atualizar_figura_nova)
@@ -182,13 +186,46 @@ class Controlador:
         self.redesenhar()
     
     def copiar_figuras(self, event=None) -> None:
-       self.modelo.copiar()
+        self.modelo.copiar()
 
     def recortar_figuras(self, event=None) -> None:
         self.modelo.recortar()
-        self.redesenhar() 
+        self.redesenhar()
 
-    
+    def agrupar_selecionadas(self, event=None) -> None:
+        """Agrupa em um único grupo todas as figuras selecionadas."""
+        selecionadas = list(self.modelo.selecionada())
+        if len(selecionadas) <= 1:
+            return
+
+        novo_grupo = Grupo(selecionadas)
+        for fig in selecionadas:
+            self.modelo.remover_figura(fig)
+
+        self.modelo.adicionar(novo_grupo)
+        self.modelo.selecionar(novo_grupo)
+        self.redesenhar()
+
+    def desagrupar_selecionadas(self, event=None) -> None:
+        """Separa os grupos selecionados em suas figuras internas."""
+        selecionadas = list(self.modelo.selecionada())
+        if not selecionadas:
+            return
+
+        novas_selecionadas = []
+        for fig in selecionadas:
+            if isinstance(fig, Grupo):
+                self.modelo.remover_figura(fig)
+                for sub_fig in fig.figuras:
+                    self.modelo.adicionar(sub_fig)
+                    novas_selecionadas.append(sub_fig)
+            else:
+                novas_selecionadas.append(fig)
+
+        self.modelo.selecionadas.clear()
+        self.modelo.selecionadas.extend(novas_selecionadas)
+        self.redesenhar()
+
     def colar_figuras(self, event=None) -> None:
         """Pede ao modelo para colar as figuras e manda a visão desenhar os novos clones."""
         # O modelo cola e nos devolve a lista das novas instâncias que foram criadas
