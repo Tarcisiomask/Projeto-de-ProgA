@@ -37,6 +37,7 @@ Registro de quem fez o quê em cada entrega.
 | Gustavo Alexandre Barros Souza | adiciona métodos de serialização to_dict e from_dict para as classes Figura, Linha, Retangulo, Rabisco e Oval | 1f2e068 |
 | Pedro Lucas de Jesus Vasconcelos | Testes Unitários | f26ea9f |
 | Tarcísio Almeida Mascarenhas | Padrão State para as figuras | 220ef58 |
+| Gabriel de Sena Barbosa | Salvar e abrir usando JSON | d780a76 |
 
 ## Entrega 5 — `OO.Selecao.1` (09/07/06)
 
@@ -45,7 +46,7 @@ Registro de quem fez o quê em cada entrega.
 | Gustavo Alexandre Barros Souza |  |  |
 | Pedro Lucas de Jesus Vasconcelos | Mudança de cor e movimentação em camadas | 7c63035 |
 | Tarcísio Almeida Mascarenhas | implementação da seleção única e múltipla | d0511b6 |
-
+| Gabriel de Sena Barbosa |  Criando copiar, recortar e colar  | 5a59663 |
 ## Entrega 6 — `OO.Compostas.1` (16/07/06)
 
 
