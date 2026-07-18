@@ -44,6 +44,5 @@ python main.py
 | 4 | `OO.State.1` | 07/07 |
 | 5 | `OO.Selecao.1` | 09/07 |
 | 6 | `OO.Compostas.1` | 14/07 |
-| 7 | `OO.UndoRedo.1` | 16/07 |
 
 Detalhes de quem fez o quê em cada entrega: ver [`CONTRIBUTING.md`](CONTRIBUTING.md).
